@@ -1,6 +1,7 @@
 package database
 
 import (
+	"os"
 	"sync"
 
 	"github.com/gwaylib/conf/ini"
@@ -48,7 +49,7 @@ func cacheDB(iniFileName, sectionName string) (*DB, error) {
 	if err != nil {
 		return nil, errors.As(err, "not found 'dsn'")
 	}
-	db, err = Open(drvName.String(), dsn.String())
+	db, err = Open(drvName.String(), os.ExpandEnv(dsn.String()))
 	if err != nil {
 		return nil, errors.As(err)
 	}

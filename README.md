@@ -85,13 +85,13 @@ var u = &User{
 // 新增例子一：
 // 在需要时设置默认驱动名
 // database.DEFAULT_DRV_NAME = database.DRV_NAME_MYSQL
-if _, err := database.InsertStruct(mdb, u, "testing"); err != nil{
+if _, err := database.InsertStruct(mdb, "testing", u); err != nil{
     // ... 
 }
 // ...
 
 // 新增例子二：
-if _, err := database.InsertStruct(mdb, u, "testing", "mysql"); err != nil{
+if _, err := database.InsertStruct(mdb, "testing", u, "mysql"); err != nil{
     // ... 
 }
 // ...

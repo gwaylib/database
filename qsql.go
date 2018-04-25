@@ -129,6 +129,7 @@ func scanStruct(rows Rows, obj interface{}) error {
 	}
 
 	fields := refxM.TraversalsByName(base, columns)
+	fmt.Println("%+v", fields)
 	values := make([]interface{}, len(columns))
 
 	direct := reflect.Indirect(value)

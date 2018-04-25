@@ -64,13 +64,13 @@ result, err := database.Exec(mdb, "UPDATE ...")
 ``` text
 // 定义表结构体
 type User struct{
-    // autoincrement 标签在插入时将被自动忽略插入
-    Id   int64 `db:"id,autoincrement"`
+    // autoincrement或者auto_increment 标签在插入时将被自动忽略插入
+    Id   int64 `db:"id,auto_increment"`
     Name string `db:"name"`
 }
 
 // 实现自增回调接口
-// AutoIncrAble接口应配合autoincrement标签使用
+// AutoIncrAble接口应配合auto_increment标签使用
 func (u *User)SetLastInsertId(id int64, err error){
     if err != nil{
         panic(err)

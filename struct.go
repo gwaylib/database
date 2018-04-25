@@ -121,6 +121,11 @@ func travelChild(f *reflectx.FieldInfo, v reflect.Value, order *int, drvName *st
 			// ignore 'autoincrement' for insert data
 			return
 		}
+		_, ok = f.Options["auto_increment"]
+		if ok {
+			// ignore 'auto_increment' for insert data
+			return
+		}
 
 		*outputNames = append(*outputNames, []byte(f.Name+",")...)
 		*outputVals = append(*outputVals, v.Interface())

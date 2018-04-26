@@ -49,7 +49,7 @@ import (
 
 ### 使用标准查询
 ``` text
-mdb := database.CacheDB("./datastore.cfg", "master")
+mdb := database.CacheDB("./datastore.cfg", "master") // 当使用了Cache，在程序退出时可调用database.CloseCache进行正常关闭数据库连接
 // or mdb = <sql.Tx>
 row := database.QueryRow(mdb, "SELECT * ...")
 // ...
@@ -111,7 +111,8 @@ multiTx = append(multiTx, database.NewMultiTx(
 ))
 
 // do exec multi tx
-tx, err := database.CacheDB("./datastore.cfg", "master").Begin()
+mdb := database.CacheDB("./datastore.cfg", "master") // 当使用了Cache，在程序退出时可调用database.CloseCache进行正常关闭数据库连接
+tx, err := mdb.Begin()
 if err != nil{
     // ...
 }
@@ -141,7 +142,7 @@ type User struct{
 }
 
 // 方法一
-mdb := database.CacheDB("./datastore.cfg", "master")
+mdb := database.CacheDB("./datastore.cfg", "master") // 当使用了Cache，在程序退出时可调用database.CloseCache进行正常关闭数据库连接
 // or mdb = <sql.Tx>
 var u = *User{}
 if err := database.QueryStruct(mdb, u, "SELECT id, name FROM a WHERE id = ?", id)
@@ -152,7 +153,7 @@ if err != nil{
 
 // 或者
 // 方法二
-mdb := database.CacheDB("./datastore.cfg", "master")
+mdb := database.CacheDB("./datastore.cfg", "master") // 当使用了Cache，在程序退出时可调用database.CloseCache进行正常关闭数据库连接
 // or mdb = <sql.Tx>
 var u = *User{}
 if err := database.ScanStruct(database.QueryRow(mdb, "SELECT id, name FROM a WHERE id = ?", id), u); err != nil {
@@ -161,7 +162,7 @@ if err := database.ScanStruct(database.QueryRow(mdb, "SELECT id, name FROM a WHE
 
 // 或者
 // 方法三
-mdb := database.CacheDB("./datastore.cfg", "master")
+mdb := database.CacheDB("./datastore.cfg", "master") // 当使用了Cache，在程序退出时可调用database.CloseCache进行正常关闭数据库连接
 // or mdb = <sql.Tx>
 var u = []*User{}
 if err := database.QueryStructs(mdb, &u, "SELECT id, name FROM a WHERE id = ?", id); err != nil {
@@ -175,7 +176,7 @@ if len(u) == 0{
 
 // 或者
 // 方法四
-mdb := database.CacheDB("./datastore.cfg", "master")
+mdb := database.CacheDB("./datastore.cfg", "master") // 当使用了Cache，在程序退出时可调用database.CloseCache进行正常关闭数据库连接
 // or mdb = <sql.Tx>
 rows, err := database.Query(mdb, "SELECT id, name FROM a WHERE id = ?", id)
 if err != nil {
@@ -201,7 +202,7 @@ import (
     _ "github.com/go-sql-driver/mysql"
 )
 
-mdb := database.CacheDB("./datastore.cfg", "master")
+mdb := database.CacheDB("./datastore.cfg", "master") // 当使用了Cache，在程序退出时可调用database.CloseCache进行正常关闭数据库连接
 // or mdb = <sql.Tx>
 count := 0
 if err := database.QueryElem(mdb, &count, "SELECT count(*) FROM a WHERE id = ?", id); err != nil{
@@ -218,7 +219,7 @@ import (
 )
 
 
-mdb := database.CacheDB("./datastore.cfg", "master")
+mdb := database.CacheDB("./datastore.cfg", "master") // 当使用了Cache，在程序退出时可调用database.CloseCache进行正常关闭数据库连接
 
 var (
 	userInfoQsql = &qsql.Template{

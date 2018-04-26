@@ -56,3 +56,12 @@ func cacheDB(iniFileName, sectionName string) (*DB, error) {
 	cache[key] = db
 	return db, nil
 }
+
+func closeCache() {
+	cacheLock.Lock()
+	defer cacheLock.Unlock()
+	for key, db := range cache {
+		Close(db)
+		delete(cache, key)
+	}
+}

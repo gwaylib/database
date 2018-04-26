@@ -53,11 +53,16 @@ func CacheDB(iniFileName, sectionName string) *DB {
 }
 
 // 检查数据库是否存在并返回数据连接实例
-func HasDB(etcFileName, sectionName string) (*DB, error) {
+func HasCache(etcFileName, sectionName string) (*DB, error) {
 	return cacheDB(etcFileName, sectionName)
 }
 
-// 提供此懒的关闭方法，调用者不需要处理错误
+// 当使用了Cahce并且需要关闭时，此接口提供关闭所有Cache的方法
+func CloseCahce() {
+	closeCache()
+}
+
+// 提供懒处理的关闭方法，调用者不需要处理错误
 func Close(closer io.Closer) {
 	if closer == nil {
 		return

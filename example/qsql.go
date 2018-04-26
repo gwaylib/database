@@ -24,6 +24,7 @@ func (u *TestingUser) SetLastInsertId(id int64, err error) {
 
 func main() {
 	mdb, _ := database.Open("sqlite3", ":memory:")
+	defer database.Close(mdb)
 
 	// create table
 	if _, err := database.Exec(mdb,

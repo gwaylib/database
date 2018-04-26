@@ -18,6 +18,8 @@ sqlx框架
 
 未实现其他功能比如创建表等是个人认为专业的数据库工具更适用于这方面的操作与实现。
 
+未实现标准查询中的stmt功能, 个人认为stmt主要用于提高执行性能，直接使用系统标准库即可。
+
 # 使用例子：
 
 ## 配置文件
@@ -49,7 +51,6 @@ import (
 ``` text
 mdb := database.CacheDB("./datastore.cfg", "master")
 // or mdb = <sql.Tx>
-// or mdb = <sql.Stmt>
 row := database.QueryRow(mdb, "SELECT * ...")
 // ...
 
@@ -142,7 +143,6 @@ type User struct{
 // 方法一
 mdb := database.CacheDB("./datastore.cfg", "master")
 // or mdb = <sql.Tx>
-// or mdb = <sql.Stmt>
 var u = *User{}
 if err := database.QueryStruct(mdb, u, "SELECT id, name FROM a WHERE id = ?", id)
 if err != nil{
@@ -154,7 +154,6 @@ if err != nil{
 // 方法二
 mdb := database.CacheDB("./datastore.cfg", "master")
 // or mdb = <sql.Tx>
-// or mdb = <sql.Stmt>
 var u = *User{}
 if err := database.ScanStruct(database.QueryRow(mdb, "SELECT id, name FROM a WHERE id = ?", id), u); err != nil {
     // ...
@@ -164,7 +163,6 @@ if err := database.ScanStruct(database.QueryRow(mdb, "SELECT id, name FROM a WHE
 // 方法三
 mdb := database.CacheDB("./datastore.cfg", "master")
 // or mdb = <sql.Tx>
-// or mdb = <sql.Stmt>
 var u = []*User{}
 if err := database.QueryStructs(mdb, &u, "SELECT id, name FROM a WHERE id = ?", id); err != nil {
     // ...
@@ -179,7 +177,6 @@ if len(u) == 0{
 // 方法四
 mdb := database.CacheDB("./datastore.cfg", "master")
 // or mdb = <sql.Tx>
-// or mdb = <sql.Stmt>
 rows, err := database.Query(mdb, "SELECT id, name FROM a WHERE id = ?", id)
 if err != nil {
     // ...
@@ -206,7 +203,6 @@ import (
 
 mdb := database.CacheDB("./datastore.cfg", "master")
 // or mdb = <sql.Tx>
-// or mdb = <sql.Stmt>
 count := 0
 if err := database.QueryElem(mdb, &count, "SELECT count(*) FROM a WHERE id = ?", id); err != nil{
     // ...

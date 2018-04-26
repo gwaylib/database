@@ -123,7 +123,7 @@ func QueryStruct(db Queryer, obj interface{}, querySql string, args ...interface
 	return queryStruct(db, obj, querySql, args...)
 }
 
-// 通过反射查询结果到结构体数组
+// 通过反射查询多个结果到结构体数组
 // 如果没有数据，返回成功，不改变原数组的值
 func QueryStructs(db Queryer, obj interface{}, querySql string, args ...interface{}) error {
 	return queryStructs(db, obj, querySql, args...)
@@ -132,6 +132,11 @@ func QueryStructs(db Queryer, obj interface{}, querySql string, args ...interfac
 // 查询一个支持Scan的数据类型
 func QueryElem(db Queryer, result interface{}, querySql string, args ...interface{}) error {
 	return queryElem(db, result, querySql, args...)
+}
+
+// 通过反射查询多个结果到数据类型数组
+func QueryElems(db Queryer, result interface{}, querySql string, args ...interface{}) error {
+	return queryElems(db, result, querySql, args...)
 }
 
 // 执行一个通用的查询

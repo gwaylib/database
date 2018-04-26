@@ -129,7 +129,6 @@ func scanStruct(rows Rows, obj interface{}) error {
 	}
 
 	fields := refxM.TraversalsByName(base, columns)
-	fmt.Println("%+v", fields)
 	values := make([]interface{}, len(columns))
 
 	direct := reflect.Indirect(value)
@@ -152,23 +151,20 @@ func scanStructs(rows Rows, obj interface{}) error {
 	if obj == nil {
 		return errors.New("nil pointer passed to StructScan destination")
 	}
-
 	value := reflect.ValueOf(obj)
 	if value.Kind() != reflect.Ptr {
 		return errors.New("must pass a pointer, not a value, to StructScan destination")
 	}
-
 	slice := reflectx.Deref(value.Type())
 	if slice.Kind() != reflect.Slice {
 		return errors.As(fmt.Errorf("expected slice but got %s", value.Kind()))
 	}
+	base := reflectx.Deref(slice.Elem())
 
 	columns, err := rows.Columns()
 	if err != nil {
 		return errors.As(err)
 	}
-
-	base := reflectx.Deref(slice.Elem())
 	fields := refxM.TraversalsByName(base, columns)
 	direct := reflect.Indirect(value)
 	isPtr := slice.Elem().Kind() == reflect.Ptr
@@ -232,6 +228,44 @@ func queryElem(db Queryer, result interface{}, querySql string, args ...interfac
 	return nil
 }
 
+// 查询一个支持Scan的数据类型
+func queryElems(db Queryer, arr interface{}, querySql string, args ...interface{}) error {
+	if arr == nil {
+		return errors.New("nil pointer passed to StructScan destination")
+	}
+	value := reflect.ValueOf(arr)
+	if value.Kind() != reflect.Ptr {
+		return errors.New("must pass a pointer, not a value, to StructScan destination")
+	}
+	slice := reflectx.Deref(value.Type())
+	if slice.Kind() != reflect.Slice {
+		return errors.As(fmt.Errorf("expected slice but got %s", value.Kind()))
+	}
+	base := reflectx.Deref(slice.Elem())
+
+	rows, err := db.Query(querySql, args...)
+	if err != nil {
+		return errors.As(err, querySql, args)
+	}
+	defer Close(rows)
+
+	isPtr := slice.Elem().Kind() == reflect.Ptr
+	direct := reflect.Indirect(value)
+	var vp reflect.Value
+	for rows.Next() {
+		vp = reflect.New(base)
+		if err := rows.Scan(vp.Interface()); err != nil {
+			return errors.As(err)
+		}
+		if isPtr {
+			direct.Set(reflect.Append(direct, vp))
+		} else {
+			direct.Set(reflect.Append(direct, reflect.Indirect(vp)))
+		}
+	}
+	return nil
+}
+
 // 执行一个通用的查询
 // 因需要查标题，相对标准sql会慢一些，适用于偷懒查询的方式
 // 即使发生错误返回至少是零长度的值
@@ -242,7 +276,7 @@ func queryTable(db Queryer, querySql string, args ...interface{}) (titles []stri
 	if err != nil {
 		return titles, result, errors.As(err, args)
 	}
-	defer rows.Close()
+	defer Close(rows)
 
 	titles, err = rows.Columns()
 	if err != nil {
@@ -271,7 +305,7 @@ func queryMap(db Queryer, querySql string, args ...interface{}) ([]map[string]in
 	if err != nil {
 		return []map[string]interface{}{}, errors.As(err, args)
 	}
-	defer rows.Close()
+	defer Close(rows)
 
 	// 列名
 	names, err := rows.Columns()
@@ -286,15 +320,16 @@ func queryMap(db Queryer, querySql string, args ...interface{}) ([]map[string]in
 		if err := rows.Scan(r...); err != nil {
 			return []map[string]interface{}{}, errors.As(err, args)
 		}
-		result := map[string]interface{}{}
+		mData := map[string]interface{}{}
 		for i, name := range names {
 			// 校验列名重复性
-			_, ok := result[name]
+			_, ok := mData[name]
 			if ok {
-				return []map[string]interface{}{}, errors.New("Already exist column name").As(name)
+				return result, errors.New("Already exist column name").As(name)
 			}
-			result[name] = r[i]
+			mData[name] = r[i]
 		}
+		result = append(result, mData)
 	}
 	if len(result) == 0 {
 		return []map[string]interface{}{}, errors.ErrNoData.As(err, args)

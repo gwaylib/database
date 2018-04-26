@@ -57,8 +57,8 @@ func HasCache(etcFileName, sectionName string) (*DB, error) {
 	return cacheDB(etcFileName, sectionName)
 }
 
-// 当使用了Cahce并且需要关闭时，此接口提供关闭所有Cache的方法
-func CloseCahce() {
+// 当使用了Cache并且需要关闭时，此接口提供关闭所有Cache的方法
+func CloseCache() {
 	closeCache()
 }
 

@@ -25,7 +25,7 @@ sqlx框架
 ## Cache使用
 ### 配置文件
 
-配置文件(假定为:"./datastore.cfg")中配置如下格式:
+配置文件(假定为:"/etc/db.cfg")中配置如下格式:
 
 ``` text
 # 主库
@@ -61,6 +61,7 @@ func HasCache(section string) (*database.DB, error) {
 	return database.HasDB(dbFile, section)
 }
 
+// 当使用了Cache，在程序退出时可调用database.CloseCache进行正常关闭数据库连接
 func CloseCache(section string) {
 	database.CloseCache()
 }
@@ -78,7 +79,7 @@ mdb := db.CacheDB("master")
 
 ### 使用标准查询
 ``` text
-mdb := database.CacheDB("./datastore.cfg", "master") // 当使用了Cache，在程序退出时可调用database.CloseCache进行正常关闭数据库连接
+mdb := db.CacheDB("master") 
 // or mdb = <sql.Tx>
 row := database.QueryRow(mdb, "SELECT * ...")
 // ...
@@ -113,7 +114,7 @@ var u = &User{
 }
 
 // 新增例子一：
-// 在需要时设置默认驱动名
+// 若mdb是非本接口实现的DB时，需要设置默认驱动名
 // database.DEFAULT_DRV_NAME = database.DRV_NAME_MYSQL
 if _, err := database.InsertStruct(mdb, "testing", u); err != nil{
     // ... 
@@ -140,7 +141,7 @@ multiTx = append(multiTx, database.NewMultiTx(
 ))
 
 // do exec multi tx
-mdb := database.CacheDB("./datastore.cfg", "master") // 当使用了Cache，在程序退出时可调用database.CloseCache进行正常关闭数据库连接
+mdb := db.CacheDB("master") 
 tx, err := mdb.Begin()
 if err != nil{
     // ...
@@ -158,11 +159,6 @@ if err := tx.Commit(); err != nil {
 ## 快速查询, 用于通用性的查询，例如js页面返回
 ### 查询结果到结构体
 ``` text
-import (
-    "github.com/gwaylib/datastore/database"
-    _ "github.com/go-sql-driver/mysql"
-)
-
 
 // 定义表结构体
 type User struct{
@@ -171,7 +167,7 @@ type User struct{
 }
 
 // 方法一
-mdb := database.CacheDB("./datastore.cfg", "master") // 当使用了Cache，在程序退出时可调用database.CloseCache进行正常关闭数据库连接
+mdb := db.CacheDB("master") 
 // or mdb = <sql.Tx>
 var u = *User{}
 if err := database.QueryStruct(mdb, u, "SELECT id, name FROM a WHERE id = ?", id)
@@ -182,7 +178,7 @@ if err != nil{
 
 // 或者
 // 方法二
-mdb := database.CacheDB("./datastore.cfg", "master") // 当使用了Cache，在程序退出时可调用database.CloseCache进行正常关闭数据库连接
+mdb := db.CacheDB("master") 
 // or mdb = <sql.Tx>
 var u = *User{}
 if err := database.ScanStruct(database.QueryRow(mdb, "SELECT id, name FROM a WHERE id = ?", id), u); err != nil {
@@ -191,7 +187,7 @@ if err := database.ScanStruct(database.QueryRow(mdb, "SELECT id, name FROM a WHE
 
 // 或者
 // 方法三
-mdb := database.CacheDB("./datastore.cfg", "master") // 当使用了Cache，在程序退出时可调用database.CloseCache进行正常关闭数据库连接
+mdb := db.CacheDB("master") 
 // or mdb = <sql.Tx>
 var u = []*User{}
 if err := database.QueryStructs(mdb, &u, "SELECT id, name FROM a WHERE id = ?", id); err != nil {
@@ -205,7 +201,7 @@ if len(u) == 0{
 
 // 或者
 // 方法四
-mdb := database.CacheDB("./datastore.cfg", "master") // 当使用了Cache，在程序退出时可调用database.CloseCache进行正常关闭数据库连接
+mdb := db.CacheDB("master") 
 // or mdb = <sql.Tx>
 rows, err := database.Query(mdb, "SELECT id, name FROM a WHERE id = ?", id)
 if err != nil {
@@ -225,13 +221,7 @@ if len(u) == 0{
 
 ### 查询单个元素结果
 ```text
-// 导入驱动库
-import (
-    "github.com/gwaylib/datastore/database"
-    _ "github.com/go-sql-driver/mysql"
-)
-
-mdb := database.CacheDB("./datastore.cfg", "master") // 当使用了Cache，在程序退出时可调用database.CloseCache进行正常关闭数据库连接
+mdb := db.CacheDB("master") 
 // or mdb = <sql.Tx>
 count := 0
 if err := database.QueryElem(mdb, &count, "SELECT count(*) FROM a WHERE id = ?", id); err != nil{
@@ -241,14 +231,7 @@ if err := database.QueryElem(mdb, &count, "SELECT count(*) FROM a WHERE id = ?",
 
 ### 批量查询
 ```text
-// 导入驱动库
-import (
-    "github.com/gwaylib/datastore/database"
-    _ "github.com/go-sql-driver/mysql"
-)
-
-
-mdb := database.CacheDB("./datastore.cfg", "master") // 当使用了Cache，在程序退出时可调用database.CloseCache进行正常关闭数据库连接
+mdb := db.CacheDB("master") 
 
 var (
 	userInfoQsql = &qsql.Template{

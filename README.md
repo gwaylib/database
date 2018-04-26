@@ -22,7 +22,8 @@ sqlx框架
 
 # 使用例子：
 
-## 配置文件
+## Cache使用
+### 配置文件
 
 配置文件(假定为:"./datastore.cfg")中配置如下格式:
 
@@ -38,14 +39,42 @@ driver: mysql
 dsn: username:passwd@tcp(127.0.0.1:3306)/log?timeout=30s&strict=true&loc=Local&parseTime=true&allowOldPasswords=1
 ```
 
-## 性能级别建议使用标准库以便可灵活运用
+### 重写Cache接口
+
 ``` text
+package db
+
 // 导入驱动库
 import (
-    "github.com/gwaylib/datastore/database"
-    _ "github.com/go-sql-driver/mysql"
+	"github.com/gwaylib/conf"
+	"github.com/gwaylib/database"
+	_ "github.com/go-sql-driver/mysql"
 )
+
+var dbFile = conf.RootDir() + "/etc/db.cfg"
+
+func CacheDB(section string) *database.DB {
+	return database.CacheDB(dbFile, section)
+}
+
+func HasCache(section string) (*database.DB, error) {
+	return database.HasDB(dbFile, section)
+}
+
+func CloseCache(section string) {
+	database.CloseCache()
+}
+
 ```
+
+### Cache调用
+``` text
+mdb := db.CacheDB("master")
+```
+
+
+
+## 性能级别建议使用标准库以便可灵活运用
 
 ### 使用标准查询
 ``` text

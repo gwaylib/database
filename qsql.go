@@ -52,14 +52,21 @@ const (
 // 关于drvNames的设计说明
 // 因支持一个可变参数, 或未填，将使用默认值:DEFAULT_DRV_NAME
 func insertStruct(exec Execer, tbName string, obj interface{}, drvNames ...string) (sql.Result, error) {
+	// 自动检查数据库驱动名称
 	drvName := DEFAULT_DRV_NAME
-	drvNamesLen := len(drvNames)
-	if drvNamesLen > 0 {
-		if drvNamesLen != 0 {
-			panic(errors.New("'drvNames' expect only one argument").As(drvNames))
+	db, ok := exec.(*DB)
+	if ok {
+		drvName = db.DriverName()
+	} else {
+		drvNamesLen := len(drvNames)
+		if drvNamesLen > 0 {
+			if drvNamesLen != 0 {
+				panic(errors.New("'drvNames' expect only one argument").As(drvNames))
+			}
+			drvName = drvNames[0]
 		}
-		drvName = drvNames[0]
 	}
+
 	names, inputs, vals, err := reflectInsertStruct(obj, drvName)
 	if err != nil {
 		return nil, errors.As(err)

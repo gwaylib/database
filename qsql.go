@@ -228,7 +228,7 @@ func queryElem(db Queryer, result interface{}, querySql string, args ...interfac
 	return nil
 }
 
-// 查询一个支持Scan的数据类型
+// 查询一个支持Scan的数据类型数组
 func queryElems(db Queryer, arr interface{}, querySql string, args ...interface{}) error {
 	if arr == nil {
 		return errors.New("nil pointer passed to StructScan destination")

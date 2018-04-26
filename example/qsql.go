@@ -26,13 +26,13 @@ func main() {
 	mdb, _ := database.Open("sqlite3", ":memory:")
 
 	// create table
-	if _, err := database.Exec(mdb, `
-CREATE TABLE user (
-  "id" INTEGER PRIMARY KEY NOT NULL,
-  "username" VARCHAR(32) NOT NULL UNIQUE,
-  "passwd" VARCHAR(128) NOT NULL,
-  "created_at" datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
-);`); err != nil {
+	if _, err := database.Exec(mdb,
+		`CREATE TABLE user (
+		  "id" INTEGER PRIMARY KEY NOT NULL,
+		  "username" VARCHAR(32) NOT NULL UNIQUE,
+		  "passwd" VARCHAR(128) NOT NULL,
+		  "created_at" datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
+		);`); err != nil {
 		panic(err)
 	}
 

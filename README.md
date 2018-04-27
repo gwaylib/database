@@ -53,8 +53,8 @@ import (
 
 var dbFile = conf.RootDir() + "/etc/db.cfg"
 
-func CacheDB(section string) *database.DB {
-	return database.CacheDB(dbFile, section)
+func GetCache(section string) *database.DB {
+	return database.GetCache(dbFile, section)
 }
 
 func HasCache(section string) (*database.DB, error) {
@@ -62,7 +62,7 @@ func HasCache(section string) (*database.DB, error) {
 }
 
 // 当使用了Cache，在程序退出时可调用database.CloseCache进行正常关闭数据库连接
-func CloseCache(section string) {
+func CloseCache() {
 	database.CloseCache()
 }
 
@@ -70,7 +70,7 @@ func CloseCache(section string) {
 
 ### Cache调用
 ``` text
-mdb := db.CacheDB("master")
+mdb := db.GetCache("master")
 ```
 
 
@@ -79,7 +79,7 @@ mdb := db.CacheDB("master")
 
 ### 使用标准查询
 ``` text
-mdb := db.CacheDB("master") 
+mdb := db.GetCache("master") 
 // or mdb = <sql.Tx>
 row := database.QueryRow(mdb, "SELECT * ...")
 // ...
@@ -141,7 +141,7 @@ multiTx = append(multiTx, database.NewMultiTx(
 ))
 
 // do exec multi tx
-mdb := db.CacheDB("master") 
+mdb := db.GetCache("master") 
 tx, err := mdb.Begin()
 if err != nil{
     // ...
@@ -167,7 +167,7 @@ type User struct{
 }
 
 // 方法一
-mdb := db.CacheDB("master") 
+mdb := db.GetCache("master") 
 // or mdb = <sql.Tx>
 var u = *User{}
 if err := database.QueryStruct(mdb, u, "SELECT id, name FROM a WHERE id = ?", id)
@@ -178,7 +178,7 @@ if err != nil{
 
 // 或者
 // 方法二
-mdb := db.CacheDB("master") 
+mdb := db.GetCache("master") 
 // or mdb = <sql.Tx>
 var u = *User{}
 if err := database.ScanStruct(database.QueryRow(mdb, "SELECT id, name FROM a WHERE id = ?", id), u); err != nil {
@@ -187,7 +187,7 @@ if err := database.ScanStruct(database.QueryRow(mdb, "SELECT id, name FROM a WHE
 
 // 或者
 // 方法三
-mdb := db.CacheDB("master") 
+mdb := db.GetCache("master") 
 // or mdb = <sql.Tx>
 var u = []*User{}
 if err := database.QueryStructs(mdb, &u, "SELECT id, name FROM a WHERE id = ?", id); err != nil {
@@ -201,7 +201,7 @@ if len(u) == 0{
 
 // 或者
 // 方法四
-mdb := db.CacheDB("master") 
+mdb := db.GetCache("master") 
 // or mdb = <sql.Tx>
 rows, err := database.Query(mdb, "SELECT id, name FROM a WHERE id = ?", id)
 if err != nil {
@@ -221,7 +221,7 @@ if len(u) == 0{
 
 ### 查询单个元素结果
 ```text
-mdb := db.CacheDB("master") 
+mdb := db.GetCache("master") 
 // or mdb = <sql.Tx>
 count := 0
 if err := database.QueryElem(mdb, &count, "SELECT count(*) FROM a WHERE id = ?", id); err != nil{
@@ -231,7 +231,7 @@ if err := database.QueryElem(mdb, &count, "SELECT count(*) FROM a WHERE id = ?",
 
 ### 批量查询
 ```text
-mdb := db.CacheDB("master") 
+mdb := db.GetCache("master") 
 
 var (
 	userInfoQsql = &qsql.Template{

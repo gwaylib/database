@@ -1,6 +1,8 @@
 package database
 
 import (
+	"database/sql"
+	"database/sql/driver"
 	"fmt"
 	"reflect"
 	"strings"
@@ -10,11 +12,72 @@ import (
 	"github.com/jmoiron/sqlx/reflectx"
 )
 
+// Bool type
+type Bool bool
+
+func (v *Bool) Scan(i interface{}) error {
+	b := sql.NullBool{}
+	if err := b.Scan(i); err != nil {
+		return err
+	}
+	*v = Bool(b.Bool)
+	return nil
+}
+func (v Bool) Value() (driver.Value, error) {
+	return v, nil
+}
+
+// Int64 type
+type Int64 int64
+
+func (v *Int64) Scan(i interface{}) error {
+	b := sql.NullInt64{}
+	if err := b.Scan(i); err != nil {
+		return err
+	}
+	*v = Int64(b.Int64)
+	return nil
+}
+func (v Int64) Value() (driver.Value, error) {
+	return v, nil
+}
+
+// Float64 type
+type Float64 float64
+
+func (v *Float64) Scan(i interface{}) error {
+	b := sql.NullFloat64{}
+	if err := b.Scan(i); err != nil {
+		return err
+	}
+	*v = Float64(b.Float64)
+	return nil
+}
+func (v Float64) Value() (driver.Value, error) {
+	return v, nil
+}
+
+// String type
+type String string
+
+func (v *String) Scan(i interface{}) error {
+	b := sql.NullString{}
+	if err := b.Scan(i); err != nil {
+		return err
+	}
+	*v = String(b.String)
+	return nil
+}
+func (v String) Value() (driver.Value, error) {
+	return v, nil
+}
+
 // 通用的字符串查询
 type DBData string
 
 func (d *DBData) Scan(i interface{}) error {
 	if i == nil {
+		*d = ""
 		return nil
 	}
 	switch i.(type) {

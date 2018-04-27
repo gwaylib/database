@@ -20,7 +20,7 @@ func regCache(iniFileName, sectionName string, db *DB) {
 	cache[key] = db
 }
 
-func cacheDB(iniFileName, sectionName string) (*DB, error) {
+func getCache(iniFileName, sectionName string) (*DB, error) {
 	cacheLock.Lock()
 	defer cacheLock.Unlock()
 

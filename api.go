@@ -44,8 +44,8 @@ func RegCache(iniFileName, sectionName string, db *DB) {
 
 // 获取数据库池中的实例
 // 如果不存在，会使用配置文件进行读取
-func CacheDB(iniFileName, sectionName string) *DB {
-	db, err := cacheDB(iniFileName, sectionName)
+func GetCache(iniFileName, sectionName string) *DB {
+	db, err := getCache(iniFileName, sectionName)
 	if err != nil {
 		panic(err)
 	}
@@ -54,10 +54,10 @@ func CacheDB(iniFileName, sectionName string) *DB {
 
 // 检查数据库是否存在并返回数据连接实例
 func HasCache(etcFileName, sectionName string) (*DB, error) {
-	return cacheDB(etcFileName, sectionName)
+	return getCache(etcFileName, sectionName)
 }
 
-// 当使用了Cache并且需要关闭时，此接口提供关闭所有Cache的方法
+// 当使用了Cache，在程序退出时可调用database.CloseCache进行正常关闭数据库连接
 func CloseCache() {
 	closeCache()
 }

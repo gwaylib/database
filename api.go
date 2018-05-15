@@ -6,6 +6,7 @@ package database
 import (
 	"database/sql"
 	"io"
+	"runtime/debug"
 
 	"github.com/gwaylib/errors"
 	"github.com/gwaylib/log"
@@ -68,7 +69,8 @@ func Close(closer io.Closer) {
 		return
 	}
 	if err := closer.Close(); err != nil {
-		log.Warn(errors.As(err))
+		println(errors.As(err))
+		debug.PrintStack()
 	}
 }
 

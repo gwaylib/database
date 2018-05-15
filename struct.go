@@ -58,18 +58,21 @@ func (v Float64) Value() (driver.Value, error) {
 }
 
 // String type
-type String string
+type Str string
 
-func (v *String) Scan(i interface{}) error {
+func (v *Str) Scan(i interface{}) error {
 	b := sql.NullString{}
 	if err := b.Scan(i); err != nil {
 		return err
 	}
-	*v = String(b.String)
+	*v = Str(b.String)
 	return nil
 }
-func (v String) Value() (driver.Value, error) {
+func (v Str) Value() (driver.Value, error) {
 	return v, nil
+}
+func (v *Str) String() string {
+	return string(*v)
 }
 
 // 通用的字符串查询

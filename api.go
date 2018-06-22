@@ -69,7 +69,7 @@ func Close(closer io.Closer) {
 		return
 	}
 	if err := closer.Close(); err != nil {
-		println(errors.As(err))
+		println(errors.As(err).Error())
 		debug.PrintStack()
 	}
 }

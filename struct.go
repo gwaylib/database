@@ -58,20 +58,20 @@ func (v Float64) Value() (driver.Value, error) {
 }
 
 // String type
-type Str string
+type String string
 
-func (v *Str) Scan(i interface{}) error {
+func (v *String) Scan(i interface{}) error {
 	b := sql.NullString{}
 	if err := b.Scan(i); err != nil {
 		return err
 	}
-	*v = Str(b.String)
+	*v = String(b.String)
 	return nil
 }
-func (v Str) Value() (driver.Value, error) {
+func (v String) Value() (driver.Value, error) {
 	return v, nil
 }
-func (v *Str) String() string {
+func (v *String) String() string {
 	return string(*v)
 }
 

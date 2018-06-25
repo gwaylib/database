@@ -68,7 +68,7 @@ func (v *String) Scan(i interface{}) error {
 	*v = String(b.String)
 	return nil
 }
-func (v String) Value() (driver.Value, error) {
+func (v *String) Value() (driver.Value, error) {
 	return v, nil
 }
 func (v *String) String() string {

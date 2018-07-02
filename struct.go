@@ -23,7 +23,7 @@ func (v *Bool) Scan(i interface{}) error {
 	*v = Bool(b.Bool)
 	return nil
 }
-func (v Bool) Value() (driver.Value, error) {
+func (v *Bool) Value() (driver.Value, error) {
 	return v, nil
 }
 
@@ -38,7 +38,7 @@ func (v *Int64) Scan(i interface{}) error {
 	*v = Int64(b.Int64)
 	return nil
 }
-func (v Int64) Value() (driver.Value, error) {
+func (v *Int64) Value() (driver.Value, error) {
 	return v, nil
 }
 
@@ -53,7 +53,7 @@ func (v *Float64) Scan(i interface{}) error {
 	*v = Float64(b.Float64)
 	return nil
 }
-func (v Float64) Value() (driver.Value, error) {
+func (v *Float64) Value() (driver.Value, error) {
 	return v, nil
 }
 

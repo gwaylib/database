@@ -32,11 +32,13 @@ sqlx框架
 [master]
 driver: mysql
 dsn: username:passwd@tcp(127.0.0.1:3306)/center?timeout=30s&strict=true&loc=Local&parseTime=true&allowOldPasswords=1
+life_time:7200 # 选填，单位秒，未配置时默认值为系统默认值；用于设置sql.SetConnMaxLifetime(time.Duration)值
 
 # 日志库
 [log]
 driver: mysql
 dsn: username:passwd@tcp(127.0.0.1:3306)/log?timeout=30s&strict=true&loc=Local&parseTime=true&allowOldPasswords=1
+life_time:7200 # 选填，单位秒，未配置时默认值为系统默认值；用于设置sql.SetConnMaxLifetime(time.Duration)值
 ```
 
 ### 重写Cache接口

@@ -2,9 +2,11 @@ package database
 
 import (
 	"os"
+	"strconv"
 	"sync"
+	"time"
 
-	"github.com/gwaylib/conf/ini"
+	"github.com/go-ini/ini"
 	"github.com/gwaylib/errors"
 )
 
@@ -33,7 +35,7 @@ func getCache(iniFileName, sectionName string) (*DB, error) {
 	}
 
 	// create a new
-	cfg, err := ini.GetFile(iniFileName)
+	cfg, err := ini.Load(iniFileName)
 	if err != nil {
 		return nil, errors.As(err, iniFileName)
 	}
@@ -49,9 +51,24 @@ func getCache(iniFileName, sectionName string) (*DB, error) {
 	if err != nil {
 		return nil, errors.As(err, "not found 'dsn'")
 	}
+	// http://techblog.en.klab-blogs.com/archives/31093990.html
+	lifeTimeKey, err := section.GetKey("life_time")
+	if err != nil {
+		// ignore error, and make default value
+		lifeTimeKey = &ini.Key{}
+		lifeTimeKey.SetValue(strconv.Itoa(0))
+	}
+	lifeTime, err := lifeTimeKey.Int64()
+	if err != nil {
+		return nil, errors.As(err, "error life_time value")
+	}
+
 	db, err = Open(drvName.String(), os.ExpandEnv(dsn.String()))
 	if err != nil {
 		return nil, errors.As(err)
+	}
+	if lifeTime > 0 {
+		db.SetConnMaxLifetime(time.Duration(lifeTime) * time.Second)
 	}
 	cache[key] = db
 	return db, nil

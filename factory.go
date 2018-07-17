@@ -2,7 +2,6 @@ package database
 
 import (
 	"os"
-	"strconv"
 	"sync"
 	"time"
 
@@ -55,8 +54,10 @@ func getCache(iniFileName, sectionName string) (*DB, error) {
 	lifeTimeKey, err := section.GetKey("life_time")
 	if err != nil {
 		// ignore error, and make default value
-		lifeTimeKey = &ini.Key{}
-		lifeTimeKey.SetValue(strconv.Itoa(0))
+		lifeTimeKey, err = section.NewKey("life_time", "0")
+		if err != nil {
+			return nil, errors.As(err)
+		}
 	}
 	lifeTime, err := lifeTimeKey.Int64()
 	if err != nil {

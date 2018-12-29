@@ -8,7 +8,7 @@
 
 sqlx框架
 
-    [https://github.com/jmoiron/sqlx](https://github.com/jmoiron/sqlx)
+    https://github.com/jmoiron/sqlx
 
 
 # 使用例子：

@@ -51,7 +51,7 @@ const (
 // 添加一条数据，需要结构体至少标注字段名 `db:"name"`, 标签详情请参考github.com/jmoiron/sqlx
 // 关于drvNames的设计说明
 // 因支持一个可变参数, 或未填，将使用默认值:DEFAULT_DRV_NAME
-func insertStruct(exec Execer, tbName string, obj interface{}, drvNames ...string) (sql.Result, error) {
+func insertStruct(exec Execer, obj interface{}, tbName string, drvNames ...string) (sql.Result, error) {
 	// 自动检查数据库驱动名称
 	drvName := DEFAULT_DRV_NAME
 	db, ok := exec.(*DB)

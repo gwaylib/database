@@ -97,8 +97,8 @@ func ExecMultiTx(tx *sql.Tx, mTx []*MultiTx) error {
 // 通过反射添加一条数据，需要结构体至少标注字段名 `db:"name"`, 标签详情请参考github.com/jmoiron/sqlx
 // 关于drvNames的设计说明
 // 因支持一个可变参数, 或未填，将使用默认值:DEFAULT_DRV_NAME
-func InsertStruct(exec Execer, tbName string, obj interface{}, drvNames ...string) (sql.Result, error) {
-	return insertStruct(exec, tbName, obj, drvNames...)
+func InsertStruct(exec Execer, obj interface{}, tbName string, drvNames ...string) (sql.Result, error) {
+	return insertStruct(exec, obj, tbName, drvNames...)
 }
 
 // 实现db.Query查询

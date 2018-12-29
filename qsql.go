@@ -53,7 +53,7 @@ const (
 // 因支持一个可变参数, 或未填，将使用默认值:DEFAULT_DRV_NAME
 func insertStruct(exec Execer, obj interface{}, tbName string, drvNames ...string) (sql.Result, error) {
 	// 自动检查数据库驱动名称
-	drvName := DEFAULT_DRV_NAME
+	drvName := REFLECT_DRV_NAME
 	db, ok := exec.(*DB)
 	if ok {
 		drvName = db.DriverName()

@@ -21,7 +21,8 @@ const (
 )
 
 var (
-	DEFAULT_DRV_NAME = DRV_NAME_MYSQL
+	// QueryStruct, InsertStruct的反射时用的数据库驱动
+	REFLECT_DRV_NAME = DRV_NAME_MYSQL
 )
 
 // 使用一个已有的标准数据库实例构建出实例
@@ -96,7 +97,7 @@ func ExecMultiTx(tx *sql.Tx, mTx []*MultiTx) error {
 
 // 通过反射添加一条数据，需要结构体至少标注字段名 `db:"name"`, 标签详情请参考github.com/jmoiron/sqlx
 // 关于drvNames的设计说明
-// 因支持一个可变参数, 或未填，将使用默认值:DEFAULT_DRV_NAME
+// 只支持一个可变参数, 或未填，将使用默认值:DEFAULT_DRV_NAME
 func InsertStruct(exec Execer, obj interface{}, tbName string, drvNames ...string) (sql.Result, error) {
 	return insertStruct(exec, obj, tbName, drvNames...)
 }

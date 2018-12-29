@@ -83,16 +83,20 @@ mdb := db.GetCache("master")
 
 ## 性能级别建议使用标准库以便可灵活运用
 
-### 使用标准查询
+### 执行标准查询
 ``` text
 mdb := db.GetCache("master") 
 // or mdb = <sql.Tx>
+
+// row := mdb.QueryRow("SELECT * ...")
 row := database.QueryRow(mdb, "SELECT * ...")
 // ...
 
+// rows, err := mdb.Query("SELECT * ...")
 rows, err := database.Query(mdb, "SELECT * ...")
 // ...
 
+// result, err := mdb.Exec("UPDATE ...")
 result, err := database.Exec(mdb, "UPDATE ...")
 // ...
 ```

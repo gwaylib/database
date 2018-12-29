@@ -56,7 +56,7 @@ import (
 var dbFile = conf.RootDir() + "/etc/db.cfg"
 
 func init() {
-   database.REFLECT_DR_NAME=database.DRV_NAME_MYSQL // 修改反射工具的默认数据库驱动类型, 不执行此操作时，默认是MYSQL
+   database.REFLECT_DR_NAME = database.DRV_NAME_MYSQL // 修改反射工具的默认数据库驱动类型, 不执行此操作时，默认是MYSQL
 }
 
 func GetCache(section string) *database.DB {
@@ -132,7 +132,7 @@ if _, err := database.InsertStruct(mdb, u, "testing"); err != nil{
 // ...
 
 // 新增例子二(使用指定的反射数据库驱动)：
-if _, err := database.InsertStruct(mdb, u, "testing", "mysql"); err != nil{
+if _, err := database.InsertStruct(mdb, u, "testing", database.DRV_NAME_MYSQL); err != nil{
     // ... 
 }
 // ...

@@ -44,7 +44,7 @@ func main() {
 
 	// reflect insert
 	newUser := &TestingUser{UserName: "t2", Passwd: "t2"}
-	if _, err := database.InsertStruct(mdb, "user", newUser); err != nil {
+	if _, err := database.InsertStruct(mdb, newUser, "user"); err != nil {
 		panic(err)
 	}
 	if newUser.ID == 0 {
@@ -122,7 +122,7 @@ func main() {
 		{UserName: "t4", Passwd: "t4"},
 	}
 	for _, u := range txUsers {
-		if _, err := database.InsertStruct(tx, "user", &u); err != nil {
+		if _, err := database.InsertStruct(tx, &u, "user"); err != nil {
 			fmt.Println(errors.As(err))
 			database.Rollback(tx)
 			return

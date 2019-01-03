@@ -55,7 +55,7 @@ func GetCache(section string) *database.DB {
 }
 
 func HasCache(section string) (*database.DB, error) {
-	return database.HasDB(dbFile, section)
+	return database.HasCache(dbFile, section)
 }
 
 // 当使用了Cache，在程序退出时可调用database.CloseCache进行正常关闭数据库连接

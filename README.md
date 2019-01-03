@@ -96,9 +96,9 @@ result, err := database.Exec(mdb, "UPDATE ...")
 ``` text
 // 定义表结构体
 type User struct{
-    // autoincrement或者auto_increment 标签在插入时将被自动忽略插入
-    Id   int64 `db:"id,auto_increment"`
-    Name string `db:"name"`
+    Id     int64  `db:"id,auto_increment"` // 带有autoincrement、auto_increment等标签的字段在插入时会触发SetLastInsertId接口
+    Name   string `db:"name"`
+    Ignore string `db:"-"` // 带"-"标签时，该字段将不会被执行
 }
 
 // 实现自增回调接口

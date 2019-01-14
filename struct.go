@@ -121,7 +121,7 @@ type Template struct {
 
 // 返回一个fmt.Sprintf()格式化Sql后的Template，
 // 主要用于分表的读取
-func (t Template) FmtTemplate(args ...interface{}) *Template {
+func (t Template) Sprintf(args ...interface{}) *Template {
 	countSql := t.CountSql
 	if len(countSql) > 0 {
 		countSql = fmt.Sprintf(t.CountSql, args...)

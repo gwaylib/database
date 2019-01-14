@@ -263,7 +263,7 @@ count := 0
 if err := database.QueryElem(
     mdb,
     &count, 
-    userInfoQsql.FmtTempate("user_info_200601").CountSql,
+    userInfoQsql.Sprintf("user_info_200601").CountSql,
     "13800138000",
 ); err != nil{
     // ...
@@ -272,7 +272,7 @@ if err := database.QueryElem(
 // 表格方式查询结果集
 result, err := database.QueryTable(
     mdb,
-    userInfoQsql.FmtTempate("user_info_200601").DataSql,
+    userInfoQsql.Sprintf("user_info_200601").DataSql,
     "13800138000", currPage*10, 10)
 if err != nil {
     // ...
@@ -281,7 +281,7 @@ if err != nil {
 // 或者对象方式查询结果集
 result, err := database.QueryMap(
     mdb,
-    userInfoQsql.FmtTempate("user_info_200601").DataSql,
+    userInfoQsql.Sprintf("user_info_200601").DataSql,
     "13800130000",
     currPage*10, 10) 
 if err != nil {

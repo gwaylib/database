@@ -7,8 +7,6 @@ package database
 import (
 	"database/sql"
 	"sync"
-
-	"github.com/jmoiron/sqlx"
 )
 
 // 仅继承并重写sql.DB, 不增加新的方法，
@@ -18,14 +16,12 @@ type DB struct {
 	driverName string
 	isClose    bool
 	mu         sync.Mutex
-	xdb        *sqlx.DB
 }
 
 func newDB(drvName string, db *sql.DB) *DB {
 	return &DB{
 		DB:         db,
 		driverName: drvName,
-		xdb:        sqlx.NewDb(db, drvName),
 	}
 }
 

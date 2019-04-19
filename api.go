@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	DRV_NAME_MYSQL     = "msyql"
+	DRV_NAME_MYSQL     = "mysql"
 	DRV_NAME_ORACLE    = "oracle" // or "oci8"
 	DRV_NAME_POSTGRES  = "postgres"
 	DRV_NAME_SQLITE3   = "sqlite3"

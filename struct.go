@@ -193,16 +193,22 @@ func travelChild(f *reflectx.FieldInfo, v reflect.Value, order *int, drvName *st
 			return
 		}
 
-		*outputNames = append(*outputNames, []byte(f.Name+",")...)
 		*outputVals = append(*outputVals, v.Interface())
 		switch {
 		case strings.Index(*drvName, "oracle") > -1, strings.Index(*drvName, "oci8") > -1:
+			*outputNames = append(*outputNames, []byte("\""+f.Name+"\",")...)
 			*outputInputs = append(*outputInputs, []byte(fmt.Sprintf(":%s,", f.Name))...)
 		case strings.Index(*drvName, "postgres") > -1:
+			*outputNames = append(*outputNames, []byte("\""+f.Name+"\",")...)
 			*outputInputs = append(*outputInputs, []byte(fmt.Sprintf(":%d,", *order-1))...)
 		case strings.Index(*drvName, "sqlserver") > -1, strings.Index(*drvName, "mssql") > -1:
+			*outputNames = append(*outputNames, []byte("["+f.Name+"],")...)
 			*outputInputs = append(*outputInputs, []byte(fmt.Sprintf("@p%d,", *order-1))...)
+		case strings.Index(*drvName, "mysql") > -1:
+			*outputNames = append(*outputNames, []byte("`"+f.Name+"`,")...)
+			*outputInputs = append(*outputInputs, []byte("?,")...)
 		default:
+			*outputNames = append(*outputNames, []byte("\""+f.Name+"\",")...)
 			*outputInputs = append(*outputInputs, []byte("?,")...)
 		}
 

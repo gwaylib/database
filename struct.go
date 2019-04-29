@@ -38,8 +38,8 @@ func (v *Int64) Scan(i interface{}) error {
 	*v = Int64(b.Int64)
 	return nil
 }
-func (v *Int64) Value() (driver.Value, error) {
-	return v, nil
+func (v Int64) Value() (driver.Value, error) {
+	return int64(v), nil
 }
 
 // Float64 type
@@ -53,8 +53,8 @@ func (v *Float64) Scan(i interface{}) error {
 	*v = Float64(b.Float64)
 	return nil
 }
-func (v *Float64) Value() (driver.Value, error) {
-	return v, nil
+func (v Float64) Value() (driver.Value, error) {
+	return float64(v), nil
 }
 
 // String type
@@ -68,8 +68,8 @@ func (v *String) Scan(i interface{}) error {
 	*v = String(b.String)
 	return nil
 }
-func (v *String) Value() (driver.Value, error) {
-	return v, nil
+func (v String) Value() (driver.Value, error) {
+	return string(v), nil
 }
 func (v *String) String() string {
 	return string(*v)

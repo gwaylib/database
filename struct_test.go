@@ -1,6 +1,7 @@
 package database
 
 import (
+	"database/sql"
 	"fmt"
 	"testing"
 	"time"
@@ -8,14 +9,15 @@ import (
 
 // for id insert
 type ReflectTestStruct1 struct {
-	Id    int64     `db:"id"`
-	A     int       `db:"a"`
-	B     int       `db:"-"`
-	T     time.Time `db:"time"`
-	Slice []byte    `db:"data"`
-	Byte  byte      `db:"byte"`
-	DBStr DBData    `db:"dbdata"`
-	C     string
+	Id         int64          `db:"id"`
+	A          int            `db:"a"`
+	B          int            `db:"-"`
+	T          time.Time      `db:"time"`
+	Slice      []byte         `db:"data"`
+	Byte       byte           `db:"byte"`
+	DBStr      DBData         `db:"dbdata"`
+	NullString sql.NullString `db:"null_string"`
+	C          string
 }
 
 // for autoincrement
@@ -55,14 +57,14 @@ func TestReflect(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if names != "id,a,time,data,byte,dbdata,C" {
+	if names != "`id`,`a`,`time`,`data`,`byte`,`dbdata`,`null_string`,`C`" {
 		t.Fatal(names)
 	}
-	if inputs != "?,?,?,?,?,?,?" {
+	if inputs != "?,?,?,?,?,?,?,?" {
 		t.Fatal(inputs)
 	}
-	if len(vals) != 7 {
-		t.Fatal(fmt.Printf("%+v\n", vals))
+	if len(vals) != 8 {
+		t.Fatalf("%+v\n", vals)
 	}
 
 	s2 := &ReflectTestStruct2{
@@ -74,14 +76,14 @@ func TestReflect(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if names != "a,C" {
+	if names != "`a`,`C`" {
 		t.Fatal(names)
 	}
 	if inputs != "?,?" {
 		t.Fatal(inputs)
 	}
 	if len(vals) != 2 {
-		t.Fatal(fmt.Printf("%+v\n", vals))
+		t.Fatalf("%+v\n", vals)
 	}
 
 	s4 := &ReflectTestStruct4{

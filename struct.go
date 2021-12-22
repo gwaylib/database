@@ -212,7 +212,7 @@ func reflectInsertStruct(i interface{}, drvName string) (string, string, []inter
 			// found ignore tag, do next.
 			continue
 		}
-		travelStructField(field, v, &order, &drvName, &names, &inputs, &vals)
+		travelStructField(field, reflect.Indirect(v.Field(i)), &order, &drvName, &names, &inputs, &vals)
 	}
 
 	if len(names) == 0 {

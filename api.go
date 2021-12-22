@@ -1,5 +1,5 @@
 /*
-此包以工厂的模式提供数据库连接，以便优化数据库连接数
+Provides database connections in factory mode to optimize database connections
 */
 package database
 
@@ -21,16 +21,20 @@ const (
 )
 
 var (
-	// QueryStruct, InsertStruct的反射时用的数据库驱动
+	// Whe reflect the QueryStruct, InsertStruct, it need set the Driver first.
+	// For example:
+	// func init(){
+	//     database.REFLECT_DRV_NAME = database.DEV_NAME_SQLITE3
+	// }
+	// Default is using the mysql driver.
 	REFLECT_DRV_NAME = DRV_NAME_MYSQL
 )
 
-// 使用一个已有的标准数据库实例构建出实例
 func NewDB(drvName string, db *sql.DB) *DB {
 	return newDB(drvName, db)
 }
 
-// 返回一个全新的实例
+// Implement the sql.Open
 func Open(drvName, dsn string) (*DB, error) {
 	db, err := sql.Open(drvName, dsn)
 	if err != nil {
@@ -39,13 +43,13 @@ func Open(drvName, dsn string) (*DB, error) {
 	return newDB(drvName, db), nil
 }
 
-// 注册一个池实例
+// Register a db to the connection pool by manully.
 func RegCache(iniFileName, sectionName string, db *DB) {
 	regCache(iniFileName, sectionName, db)
 }
 
-// 获取数据库池中的实例
-// 如果不存在，会使用配置文件进行读取
+// Get the db instance from the cache.
+// If the db not in the cache, it will create a new instance from the ini file.
 func GetCache(iniFileName, sectionName string) *DB {
 	db, err := getCache(iniFileName, sectionName)
 	if err != nil {
@@ -54,17 +58,17 @@ func GetCache(iniFileName, sectionName string) *DB {
 	return db
 }
 
-// 检查数据库是否存在并返回数据连接实例
+// Checking the cache does it have a db instance.
 func HasCache(etcFileName, sectionName string) (*DB, error) {
 	return getCache(etcFileName, sectionName)
 }
 
-// 当使用了Cache，在程序退出时可调用database.CloseCache进行正常关闭数据库连接
+// Close all instance in the cache.
 func CloseCache() {
 	closeCache()
 }
 
-// 提供懒处理的关闭方法，调用者不需要处理错误
+// A lazy function to closed the io.Closer
 func Close(closer io.Closer) {
 	if closer == nil {
 		return
@@ -75,7 +79,7 @@ func Close(closer io.Closer) {
 	}
 }
 
-// 提供懒处理的回滚方法，调用者不需要处理错误
+// A lazy function to rollback the *sql.Tx
 func Rollback(tx *sql.Tx) {
 	err := tx.Rollback()
 
@@ -85,78 +89,73 @@ func Rollback(tx *sql.Tx) {
 	}
 }
 
-// 实现db.Exec接口
+// A way implement the sql.Exec
 func Exec(db Execer, querySql string, args ...interface{}) (sql.Result, error) {
 	return db.Exec(querySql, args...)
 }
 
-// 事务执行多个脚本
+// A way to ran multiply tx
 func ExecMultiTx(tx *sql.Tx, mTx []*MultiTx) error {
 	return execMultiTx(tx, mTx)
 }
 
-// 通过反射添加一条数据，需要结构体至少标注字段名 `db:"name"`, 标签详情请参考github.com/jmoiron/sqlx
-// 关于drvNames的设计说明
-// 只支持一个可变参数, 或未填，将使用默认值:DEFAULT_DRV_NAME
+// Reflect one db data to the struct. the struct tag format like `db:"field_title"`, reference to: http://github.com/jmoiron/sqlx
+// When you no set the REFLECT_DRV_NAME, you can point out with the drvName
 func InsertStruct(exec Execer, obj interface{}, tbName string, drvNames ...string) (sql.Result, error) {
 	return insertStruct(exec, obj, tbName, drvNames...)
 }
 
-// 实现db.Query查询
+// A sql.Query implements
 func Query(db Queryer, querySql string, args ...interface{}) (*sql.Rows, error) {
 	return db.Query(querySql, args...)
 }
 
-// 实现db.QueryRow查询
+// A sql.QueryRow implements
 func QueryRow(db Queryer, querySql string, args ...interface{}) *sql.Row {
 	return db.QueryRow(querySql, args...)
 }
 
-// 通过反射扫描结果至结构体
-// 如果没有数据，errors.ErrNoData
+// Relect the sql.Rows to a struct.
+// Return errors.ErrNoData if data not found.
 func ScanStruct(rows Rows, obj interface{}) error {
 	return scanStruct(rows, obj)
 }
 
-// 通过反射扫描结果至结构体数组
-// 如果没有数据，返回成功，不改变原数组的值
-// 代码设计请参阅github.com/jmoiron/sqlx
+// Reflect the sql.Rows to a struct array.
+// Return empty array if data not found.
+// Refere to: github.com/jmoiron/sqlx
 func ScanStructs(rows Rows, obj interface{}) error {
 	return scanStructs(rows, obj)
 }
 
-// 通过反射查询结果到结构体
-// 如果没有数据，返回errors.ErrNoData
+// Reflect the sql.Query result to a struct.
+// Return errors.ErrNoData if data not found.
 func QueryStruct(db Queryer, obj interface{}, querySql string, args ...interface{}) error {
 	return queryStruct(db, obj, querySql, args...)
 }
 
-// 通过反射查询多个结果到结构体数组
-// 如果没有数据，返回成功，不改变原数组的值
+// Reflect the sql.Query result to a struct array.
+// Return empty array if data not found.
 func QueryStructs(db Queryer, obj interface{}, querySql string, args ...interface{}) error {
 	return queryStructs(db, obj, querySql, args...)
 }
 
-// 查询一个支持Scan的数据类型
+// Query one field to a sql.Scanner.
 func QueryElem(db Queryer, result interface{}, querySql string, args ...interface{}) error {
 	return queryElem(db, result, querySql, args...)
 }
 
-// 通过反射查询多个结果到数据类型数组
+// Query one field to a sql.Scanner array.
 func QueryElems(db Queryer, result interface{}, querySql string, args ...interface{}) error {
 	return queryElems(db, result, querySql, args...)
 }
 
-// 执行一个通用的查询
-// 因需要查标题，相对标准sql会慢一些，适用于偷懒查询的方式
-// 即使发生错误返回至少是零长度的值
+// Reflect the query result to a string array.
 func QueryTable(db Queryer, querySql string, args ...interface{}) (titles []string, result [][]interface{}, err error) {
 	return queryTable(db, querySql, args...)
 }
 
-// 查询一条数据，并发map结构返回，以便页面可以直接调用
-// 因需要查标题，相对标准sql会慢一些，适用于偷懒查询的方式
-// 即使发生错误返回至少是零长度的值
+// Reflect the query result to a string map.
 func QueryMap(db Queryer, querySql string, args ...interface{}) ([]map[string]interface{}, error) {
 	return queryMap(db, querySql, args...)
 }

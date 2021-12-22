@@ -1,32 +1,43 @@
-# Refere to:
-```
-database/sql
-https://github.com/jmoiron/sqlx
-```
+# 说明
 
-# Examle:
-More examle see the examle directory.
+我很喜欢使用标准库对标准SQL的调用，因此本项目参考了其他库仅实现补充了标准库的一些不方便的地方，比如通用的新增与查询功能、配置文件使用等，以便提调编码效率，参考资料：
 
-## Using etc cache
-Assume that the configuration file path is: './etc/db.cfg'
+标准库
 
-The etc content
-```
+    database/sql
+
+sqlx框架
+
+    https://github.com/jmoiron/sqlx
+
+
+# 使用例子：
+
+## Cache使用
+### 配置文件
+
+配置文件(假定为:"/etc/db.cfg")中配置如下格式:
+
+``` text
+# 主库
 [master]
 driver: mysql
 dsn: username:passwd@tcp(127.0.0.1:3306)/center?timeout=30s&strict=true&loc=Local&parseTime=true&allowOldPasswords=1
-life_time:7200
+life_time:7200 # 选填，单位秒，未配置时默认值为系统默认值；用于设置sql.SetConnMaxLifetime(time.Duration)值
 
+# 日志库
 [log]
 driver: mysql
 dsn: username:passwd@tcp(127.0.0.1:3306)/log?timeout=30s&strict=true&loc=Local&parseTime=true&allowOldPasswords=1
-life_time:7200
-``
+life_time:7200 # 选填，单位秒，未配置时默认值为系统默认值；用于设置sql.SetConnMaxLifetime(time.Duration)值
+```
 
-Make a cache
+### 重写Cache接口
+
 ``` text
 package db
 
+// 导入驱动库
 import (
 	"github.com/gwaylib/conf"
 	"github.com/gwaylib/database"
@@ -36,7 +47,7 @@ import (
 var dbFile = conf.RootDir() + "/etc/db.cfg"
 
 func init() {
-   database.REFLECT_DRV_NAME = database.DRV_NAME_MYSQL 
+   database.REFLECT_DRV_NAME = database.DRV_NAME_MYSQL // 修改反射工具的默认数据库驱动类型, 不执行此操作时，默认是MYSQL
 }
 
 func GetCache(section string) *database.DB {
@@ -47,17 +58,23 @@ func HasCache(section string) (*database.DB, error) {
 	return database.HasCache(dbFile, section)
 }
 
+// 当使用了Cache，在程序退出时可调用database.CloseCache进行正常关闭数据库连接
 func CloseCache() {
 	database.CloseCache()
 }
+
 ```
 
-Call a cache
+### Cache调用
 ``` text
 mdb := db.GetCache("master")
 ```
 
-## Standar query 
+
+
+## 性能级别建议使用标准库以便可灵活运用
+
+### 执行标准查询
 ``` text
 mdb := db.GetCache("master") 
 // or mdb = <sql.Tx>
@@ -75,14 +92,17 @@ result, err := database.Exec(mdb, "UPDATE ...")
 // ...
 ```
 
-## Insert a struct to db(using reflect)
+### 快速新增数据
 ``` text
+// 定义表结构体
 type User struct{
-    Id     int64  `db:"id,auto_increment"` // flag "autoincrement", "auto_increment" will call "SetLastInsertId" method if you implement the database.AutoIncrAble interface.
+    Id     int64  `db:"id,auto_increment"` // 带有autoincrement、auto_increment等标签的字段在插入时会触发SetLastInsertId接口
     Name   string `db:"name"`
-    Ignore string `db:"-"` // ignore flag: "-"
+    Ignore string `db:"-"` // 带"-"标签时，该字段将不会被执行
 }
 
+// 实现自增回调接口
+// AutoIncrAble接口应配合auto_increment标签使用
 func (u *User)SetLastInsertId(id int64, err error){
     if err != nil{
         panic(err)
@@ -94,20 +114,22 @@ var u = &User{
     Name:"testing",
 }
 
-// Insert data with default driver.
+// 新增例子一：
+// 若mdb是非本接口实现的DB时，需要设置默认驱动名
+// database.DEFAULT_DRV_NAME = database.DRV_NAME_MYSQL
 if _, err := database.InsertStruct(mdb, u, "testing"); err != nil{
     // ... 
 }
 // ...
 
-// Or Insert data with designated driver.
+// 新增例子二(使用指定的反射数据库驱动)：
 if _, err := database.InsertStruct(mdb, u, "testing", database.DRV_NAME_MYSQL); err != nil{
     // ... 
 }
 // ...
 ```
 
-## MultiTx
+### 批量操纵数据
 ``` text
 multiTx := []*database.MultiTx{}
 multiTx = append(multiTx, database.NewMultiTx(
@@ -135,15 +157,17 @@ if err := tx.Commit(); err != nil {
 }
 ```
 
-## Quick query way
+## 快速查询, 用于通用性的查询，例如js页面返回
+### 查询结果到结构体
 ``` text
 
-// Way 1: query result to a struct.
+// 定义表结构体
 type User struct{
     Id   int64 `db:"id"`
     Name string `db:"name"`
 }
 
+// 方法一
 mdb := db.GetCache("master") 
 // or mdb = <sql.Tx>
 var u = *User{}
@@ -153,7 +177,8 @@ if err != nil{
 }
 // ..
 
-// Way 2: query row to struct
+// 或者
+// 方法二
 mdb := db.GetCache("master") 
 // or mdb = <sql.Tx>
 var u = *User{}
@@ -161,7 +186,8 @@ if err := database.ScanStruct(database.QueryRow(mdb, "SELECT id, name FROM a WHE
     // ...
 }
 
-// Way 3: query result to structs
+// 或者
+// 方法三
 mdb := db.GetCache("master") 
 // or mdb = <sql.Tx>
 var u = []*User{}
@@ -174,7 +200,8 @@ if len(u) == 0{
 }
 // .. 
 
-// Way 4: query rows to structs
+// 或者
+// 方法四
 mdb := db.GetCache("master") 
 // or mdb = <sql.Tx>
 rows, err := database.Query(mdb, "SELECT id, name FROM a WHERE id = ?", id)
@@ -193,8 +220,7 @@ if len(u) == 0{
 
 ```
 
-## Query an element which implementd sql.Scanner
-
+### 查询单个元素结果
 ```text
 mdb := db.GetCache("master") 
 // or mdb = <sql.Tx>
@@ -204,7 +230,7 @@ if err := database.QueryElem(mdb, &count, "SELECT count(*) FROM a WHERE id = ?",
 }
 ```
 
-## Mass query.
+### 批量查询
 ```text
 mdb := db.GetCache("master") 
 
@@ -220,7 +246,7 @@ WHERE
 `,
 		DataSql: `
 SELECT 
-    mobile "phone"
+    mobile "手机号"
 FROM 
     %s
 WHERE
@@ -232,7 +258,7 @@ LIMIT ?, ?
 	}
 )
 
-// Count the rows
+// 查询总数量
 count := 0
 if err := database.QueryElem(
     mdb,
@@ -243,8 +269,8 @@ if err := database.QueryElem(
     // ...
 }
 
-// Query the result to a string table
-title, result, err := database.QueryTable(
+// 表格方式查询结果集
+result, err := database.QueryTable(
     mdb,
     userInfoQsql.Sprintf("user_info_200601").DataSql,
     "13800138000", currPage*10, 10)
@@ -252,7 +278,7 @@ if err != nil {
     // ...
 }
 
-// Query the result to a string map
+// 或者对象方式查询结果集
 result, err := database.QueryMap(
     mdb,
     userInfoQsql.Sprintf("user_info_200601").DataSql,

@@ -95,7 +95,7 @@ func (d *DBData) Scan(i interface{}) error {
 	case bool:
 		*d = DBData(fmt.Sprintf("%t", i))
 	case time.Time:
-		*d = DBData(i.(time.Time).Format("2006-01-02 15:04:05"))
+		*d = DBData(i.(time.Time).Format(time.RFC3339))
 	default:
 		*d = DBData(fmt.Sprint(i))
 	}

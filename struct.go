@@ -151,6 +151,66 @@ var refxM = reflectx.NewMapperTagFunc("db", func(in string) string {
 })
 
 func travelStructField(f *reflectx.FieldInfo, v reflect.Value, order *int, drvName *string, outputNames *[]byte, outputInputs *[]byte, outputVals *[]interface{}) {
+	*order += 1
+	switch v.Kind() {
+	case reflect.Invalid:
+		// nil value
+		return
+	case
+		reflect.Bool,
+		reflect.Int,
+		reflect.Int8,
+		reflect.Int16,
+		reflect.Int32,
+		reflect.Int64,
+		reflect.Uint,
+		reflect.Uint8,
+		reflect.Uint16,
+		reflect.Uint32,
+		reflect.Uint64,
+		reflect.Float32,
+		reflect.Float64,
+		reflect.String:
+		// continue
+		break
+	case reflect.Struct, reflect.Pointer:
+		if _, ok := v.Interface().(driver.Valuer); ok {
+			break
+		}
+		switch v.Type().String() {
+		case "time.Time":
+			break
+		default:
+			childrenLen := len(f.Children)
+			for i := 0; i < childrenLen; i++ {
+				child := f.Children[i]
+				if child == nil {
+					// found ignore tag, do next.
+					continue
+				}
+				travelStructField(
+					child,
+					reflect.Indirect(v).Field(i),
+					order, drvName,
+					outputNames, outputInputs, outputVals,
+				)
+			}
+			return
+		}
+	default:
+		// unsupport
+		switch v.Type().String() {
+		case "[]uint8":
+			break
+		default:
+			return
+		}
+	}
+
+	//
+	// decode fileds
+	//
+
 	_, ok := f.Options["autoincrement"]
 	if ok {
 		// ignore 'autoincrement' for insert data
@@ -212,7 +272,7 @@ func reflectInsertStruct(i interface{}, drvName string) (string, string, []inter
 			// found ignore tag, do next.
 			continue
 		}
-		travelStructField(field, reflect.Indirect(v.Field(i)), &order, &drvName, &names, &inputs, &vals)
+		travelStructField(field, v.Field(i), &order, &drvName, &names, &inputs, &vals)
 	}
 
 	if len(names) == 0 {

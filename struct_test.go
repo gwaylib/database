@@ -98,7 +98,13 @@ func TestReflect(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	fmt.Printf("%+v\n", names)
-	fmt.Printf("%+v\n", inputs)
-	fmt.Printf("%+v\n", vals)
+	if names != `"id","a","time","data","byte","dbdata","null_string","C","d","a","C","e"` {
+		t.Fatal(names)
+	}
+	if inputs != ":id,:a,:time,:data,:byte,:dbdata,:null_string,:C,:d,:a,:C,:e" {
+		t.Fatal(inputs)
+	}
+	if fmt.Sprintf("%+v", vals) != `[1 100 0001-01-01 00:00:00 +0000 UTC [97 98 99] 0  {String: Valid:false} testing d 101 testing1 e]` {
+		t.Fatal(vals)
+	}
 }

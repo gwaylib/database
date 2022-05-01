@@ -1,6 +1,7 @@
 package database
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"reflect"
@@ -9,24 +10,24 @@ import (
 	"github.com/jmoiron/sqlx/reflectx"
 )
 
-// 自增回调接口
 type AutoIncrAble interface {
 	// notify for last id
 	SetLastInsertId(id int64, err error)
 }
 
-// 执行器
 type Execer interface {
 	Exec(query string, args ...interface{}) (sql.Result, error)
+	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
 }
 
-// 查询器
 type Queryer interface {
 	Query(query string, args ...interface{}) (*sql.Rows, error)
 	QueryRow(query string, args ...interface{}) *sql.Row
+
+	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
+	QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row
 }
 
-// 扫描器
 type Rows interface {
 	Close() error
 	Columns() ([]string, error)
@@ -48,11 +49,9 @@ const (
 	addObjSql = "INSERT INTO %s (%s) VALUES (%s);"
 )
 
-// 添加一条数据，需要结构体至少标注字段名 `db:"name"`, 标签详情请参考github.com/jmoiron/sqlx
-// 关于drvNames的设计说明
-// 因支持一个可变参数, 或未填，将使用默认值:DEFAULT_DRV_NAME
-func insertStruct(exec Execer, obj interface{}, tbName string, drvNames ...string) (sql.Result, error) {
-	// 自动检查数据库驱动名称
+// field flag like: `db:"name"`
+// more: github.com/jmoiron/sqlx
+func insertStruct(exec Execer, ctx context.Context, obj interface{}, tbName string, drvNames ...string) (sql.Result, error) {
 	drvName := REFLECT_DRV_NAME
 	db, ok := exec.(*DB)
 	if ok {
@@ -73,7 +72,7 @@ func insertStruct(exec Execer, obj interface{}, tbName string, drvNames ...strin
 	}
 	execSql := fmt.Sprintf(addObjSql, tbName, names, inputs)
 	// log.Debugf("%s%+v", execSql, vals)
-	result, err := exec.Exec(execSql, vals...)
+	result, err := exec.ExecContext(ctx, execSql, vals...)
 	if err != nil {
 		return nil, errors.As(err, execSql)
 	}
@@ -84,9 +83,9 @@ func insertStruct(exec Execer, obj interface{}, tbName string, drvNames ...strin
 	return result, nil
 }
 
-func execMultiTx(tx *sql.Tx, mTx []*MultiTx) error {
+func execMultiTx(tx *sql.Tx, ctx context.Context, mTx []*MultiTx) error {
 	for _, mt := range mTx {
-		if _, err := tx.Exec(mt.Query, mt.Args...); err != nil {
+		if _, err := tx.ExecContext(ctx, mt.Query, mt.Args...); err != nil {
 			return errors.As(err)
 		}
 	}
@@ -197,8 +196,8 @@ func scanStructs(rows Rows, obj interface{}) error {
 	return nil
 }
 
-func queryStruct(db Queryer, obj interface{}, querySql string, args ...interface{}) error {
-	rows, err := db.Query(querySql, args...)
+func queryStruct(db Queryer, ctx context.Context, obj interface{}, querySql string, args ...interface{}) error {
+	rows, err := db.QueryContext(ctx, querySql, args...)
 	if err != nil {
 		return errors.As(err, args)
 	}
@@ -210,8 +209,8 @@ func queryStruct(db Queryer, obj interface{}, querySql string, args ...interface
 	return nil
 }
 
-func queryStructs(db Queryer, obj interface{}, querySql string, args ...interface{}) error {
-	rows, err := db.Query(querySql, args...)
+func queryStructs(db Queryer, ctx context.Context, obj interface{}, querySql string, args ...interface{}) error {
+	rows, err := db.QueryContext(ctx, querySql, args...)
 	if err != nil {
 		return errors.As(err, args)
 	}
@@ -224,9 +223,8 @@ func queryStructs(db Queryer, obj interface{}, querySql string, args ...interfac
 	return nil
 }
 
-// 查询一个支持Scan的数据类型
-func queryElem(db Queryer, result interface{}, querySql string, args ...interface{}) error {
-	if err := db.QueryRow(querySql, args...).Scan(result); err != nil {
+func queryElem(db Queryer, ctx context.Context, result interface{}, querySql string, args ...interface{}) error {
+	if err := db.QueryRowContext(ctx, querySql, args...).Scan(result); err != nil {
 		if sql.ErrNoRows != err {
 			return errors.As(err, querySql, args)
 		}
@@ -235,8 +233,7 @@ func queryElem(db Queryer, result interface{}, querySql string, args ...interfac
 	return nil
 }
 
-// 查询一个支持Scan的数据类型数组
-func queryElems(db Queryer, arr interface{}, querySql string, args ...interface{}) error {
+func queryElems(db Queryer, ctx context.Context, arr interface{}, querySql string, args ...interface{}) error {
 	if arr == nil {
 		return errors.New("nil pointer passed to StructScan destination")
 	}
@@ -250,7 +247,7 @@ func queryElems(db Queryer, arr interface{}, querySql string, args ...interface{
 	}
 	base := reflectx.Deref(slice.Elem())
 
-	rows, err := db.Query(querySql, args...)
+	rows, err := db.QueryContext(ctx, querySql, args...)
 	if err != nil {
 		return errors.As(err, querySql, args)
 	}
@@ -276,10 +273,10 @@ func queryElems(db Queryer, arr interface{}, querySql string, args ...interface{
 // 执行一个通用的查询
 // 因需要查标题，相对标准sql会慢一些，适用于偷懒查询的方式
 // 即使发生错误返回至少是零长度的值
-func queryTable(db Queryer, querySql string, args ...interface{}) (titles []string, result [][]interface{}, err error) {
+func queryTable(db Queryer, ctx context.Context, querySql string, args ...interface{}) (titles []string, result [][]interface{}, err error) {
 	titles = []string{}
 	result = [][]interface{}{}
-	rows, err := db.Query(querySql, args...)
+	rows, err := db.QueryContext(ctx, querySql, args...)
 	if err != nil {
 		return titles, result, errors.As(err, args)
 	}
@@ -307,20 +304,18 @@ func queryTable(db Queryer, querySql string, args ...interface{}) (titles []stri
 // 查询一条数据，并发map结构返回，以便页面可以直接调用
 // 因需要查标题，相对标准sql会慢一些，适用于偷懒查询的方式
 // 即使发生错误返回至少是零长度的值
-func queryMap(db Queryer, querySql string, args ...interface{}) ([]map[string]interface{}, error) {
-	rows, err := db.Query(querySql, args...)
+func queryMap(db Queryer, ctx context.Context, querySql string, args ...interface{}) ([]map[string]interface{}, error) {
+	rows, err := db.QueryContext(ctx, querySql, args...)
 	if err != nil {
 		return []map[string]interface{}{}, errors.As(err, args)
 	}
 	defer Close(rows)
 
-	// 列名
 	names, err := rows.Columns()
 	if err != nil {
 		return []map[string]interface{}{}, errors.As(err, args)
 	}
 
-	// 取一条数据
 	result := []map[string]interface{}{}
 	for rows.Next() {
 		r := makeDBData(len(names))
@@ -329,7 +324,6 @@ func queryMap(db Queryer, querySql string, args ...interface{}) ([]map[string]in
 		}
 		mData := map[string]interface{}{}
 		for i, name := range names {
-			// 校验列名重复性
 			_, ok := mData[name]
 			if ok {
 				return result, errors.New("Already exist column name").As(name)

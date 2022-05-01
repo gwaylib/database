@@ -4,6 +4,7 @@ Provides database connections in factory mode to optimize database connections
 package database
 
 import (
+	"context"
 	"database/sql"
 	"io"
 	"runtime/debug"
@@ -93,26 +94,41 @@ func Rollback(tx *sql.Tx) {
 func Exec(db Execer, querySql string, args ...interface{}) (sql.Result, error) {
 	return db.Exec(querySql, args...)
 }
+func ExecContext(db Execer, ctx context.Context, querySql string, args ...interface{}) (sql.Result, error) {
+	return db.ExecContext(ctx, querySql, args...)
+}
 
 // A way to ran multiply tx
 func ExecMultiTx(tx *sql.Tx, mTx []*MultiTx) error {
-	return execMultiTx(tx, mTx)
+	return execMultiTx(tx, context.TODO(), mTx)
+}
+func ExecMultiTxContext(tx *sql.Tx, ctx context.Context, mTx []*MultiTx) error {
+	return execMultiTx(tx, ctx, mTx)
 }
 
 // Reflect one db data to the struct. the struct tag format like `db:"field_title"`, reference to: http://github.com/jmoiron/sqlx
 // When you no set the REFLECT_DRV_NAME, you can point out with the drvName
 func InsertStruct(exec Execer, obj interface{}, tbName string, drvNames ...string) (sql.Result, error) {
-	return insertStruct(exec, obj, tbName, drvNames...)
+	return insertStruct(exec, context.TODO(), obj, tbName, drvNames...)
+}
+func InsertStructContext(exec Execer, ctx context.Context, obj interface{}, tbName string, drvNames ...string) (sql.Result, error) {
+	return insertStruct(exec, ctx, obj, tbName, drvNames...)
 }
 
 // A sql.Query implements
 func Query(db Queryer, querySql string, args ...interface{}) (*sql.Rows, error) {
 	return db.Query(querySql, args...)
 }
+func QueryContext(db Queryer, ctx context.Context, querySql string, args ...interface{}) (*sql.Rows, error) {
+	return db.QueryContext(ctx, querySql, args...)
+}
 
 // A sql.QueryRow implements
 func QueryRow(db Queryer, querySql string, args ...interface{}) *sql.Row {
 	return db.QueryRow(querySql, args...)
+}
+func QueryRowContext(db Queryer, ctx context.Context, querySql string, args ...interface{}) *sql.Row {
+	return db.QueryRowContext(ctx, querySql, args...)
 }
 
 // Relect the sql.Rows to a struct.
@@ -131,31 +147,49 @@ func ScanStructs(rows Rows, obj interface{}) error {
 // Reflect the sql.Query result to a struct.
 // Return errors.ErrNoData if data not found.
 func QueryStruct(db Queryer, obj interface{}, querySql string, args ...interface{}) error {
-	return queryStruct(db, obj, querySql, args...)
+	return queryStruct(db, context.TODO(), obj, querySql, args...)
+}
+func QueryStructContext(db Queryer, ctx context.Context, obj interface{}, querySql string, args ...interface{}) error {
+	return queryStruct(db, ctx, obj, querySql, args...)
 }
 
 // Reflect the sql.Query result to a struct array.
 // Return empty array if data not found.
 func QueryStructs(db Queryer, obj interface{}, querySql string, args ...interface{}) error {
-	return queryStructs(db, obj, querySql, args...)
+	return queryStructs(db, context.TODO(), obj, querySql, args...)
+}
+func QueryStructsContext(db Queryer, ctx context.Context, obj interface{}, querySql string, args ...interface{}) error {
+	return queryStructs(db, ctx, obj, querySql, args...)
 }
 
 // Query one field to a sql.Scanner.
 func QueryElem(db Queryer, result interface{}, querySql string, args ...interface{}) error {
-	return queryElem(db, result, querySql, args...)
+	return queryElem(db, context.TODO(), result, querySql, args...)
+}
+func QueryElemContext(db Queryer, ctx context.Context, result interface{}, querySql string, args ...interface{}) error {
+	return queryElem(db, ctx, result, querySql, args...)
 }
 
 // Query one field to a sql.Scanner array.
 func QueryElems(db Queryer, result interface{}, querySql string, args ...interface{}) error {
-	return queryElems(db, result, querySql, args...)
+	return queryElems(db, context.TODO(), result, querySql, args...)
+}
+func QueryElemsContext(db Queryer, ctx context.Context, result interface{}, querySql string, args ...interface{}) error {
+	return queryElems(db, ctx, result, querySql, args...)
 }
 
 // Reflect the query result to a string array.
 func QueryTable(db Queryer, querySql string, args ...interface{}) (titles []string, result [][]interface{}, err error) {
-	return queryTable(db, querySql, args...)
+	return queryTable(db, context.TODO(), querySql, args...)
+}
+func QueryTableContext(db Queryer, ctx context.Context, querySql string, args ...interface{}) (titles []string, result [][]interface{}, err error) {
+	return queryTable(db, ctx, querySql, args...)
 }
 
 // Reflect the query result to a string map.
 func QueryMap(db Queryer, querySql string, args ...interface{}) ([]map[string]interface{}, error) {
-	return queryMap(db, querySql, args...)
+	return queryMap(db, context.TODO(), querySql, args...)
+}
+func QueryMapContext(db Queryer, ctx context.Context, querySql string, args ...interface{}) ([]map[string]interface{}, error) {
+	return queryMap(db, ctx, querySql, args...)
 }

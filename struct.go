@@ -173,7 +173,7 @@ func travelStructField(f *reflectx.FieldInfo, v reflect.Value, order *int, drvNa
 		reflect.String:
 		// continue
 		break
-	case reflect.Struct, reflect.Pointer:
+	case reflect.Struct, reflect.Ptr:
 		if _, ok := v.Interface().(driver.Valuer); ok {
 			break
 		}

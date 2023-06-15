@@ -31,6 +31,32 @@ var (
 	REFLECT_DRV_NAME = DRV_NAME_MYSQL
 )
 
+type AutoIncrAble interface {
+	// notify for last id
+	SetLastInsertId(id int64, err error)
+}
+
+type Execer interface {
+	Exec(query string, args ...interface{}) (sql.Result, error)
+	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
+}
+
+type Queryer interface {
+	Query(query string, args ...interface{}) (*sql.Rows, error)
+	QueryRow(query string, args ...interface{}) *sql.Row
+
+	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
+	QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row
+}
+
+type Rows interface {
+	Close() error
+	Columns() ([]string, error)
+	Err() error
+	Next() bool
+	Scan(...interface{}) error
+}
+
 func NewDB(drvName string, db *sql.DB) *DB {
 	return newDB(drvName, db)
 }
@@ -179,17 +205,17 @@ func QueryElemsContext(db Queryer, ctx context.Context, result interface{}, quer
 }
 
 // Reflect the query result to a string array.
-func QueryTable(db Queryer, querySql string, args ...interface{}) (titles []string, result [][]interface{}, err error) {
-	return queryTable(db, context.TODO(), querySql, args...)
+func QueryMatrixArr(db Queryer, querySql string, args ...interface{}) (titles []string, result [][]interface{}, err error) {
+	return queryMatrixArr(db, context.TODO(), querySql, args...)
 }
-func QueryTableContext(db Queryer, ctx context.Context, querySql string, args ...interface{}) (titles []string, result [][]interface{}, err error) {
-	return queryTable(db, ctx, querySql, args...)
+func QueryMatrixArrContext(db Queryer, ctx context.Context, querySql string, args ...interface{}) (titles []string, result [][]interface{}, err error) {
+	return queryMatrixArr(db, ctx, querySql, args...)
 }
 
 // Reflect the query result to a string map.
-func QueryMap(db Queryer, querySql string, args ...interface{}) ([]map[string]interface{}, error) {
-	return queryMap(db, context.TODO(), querySql, args...)
+func QueryMatrixMap(db Queryer, querySql string, args ...interface{}) (titles []string, result []map[string]interface{}, err error) {
+	return queryMatrixMap(db, context.TODO(), querySql, args...)
 }
-func QueryMapContext(db Queryer, ctx context.Context, querySql string, args ...interface{}) ([]map[string]interface{}, error) {
-	return queryMap(db, ctx, querySql, args...)
+func QueryMatrixMapContext(db Queryer, ctx context.Context, querySql string, args ...interface{}) (titles []string, result []map[string]interface{}, err error) {
+	return queryMatrixMap(db, ctx, querySql, args...)
 }

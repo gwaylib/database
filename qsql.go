@@ -10,32 +10,6 @@ import (
 	"github.com/jmoiron/sqlx/reflectx"
 )
 
-type AutoIncrAble interface {
-	// notify for last id
-	SetLastInsertId(id int64, err error)
-}
-
-type Execer interface {
-	Exec(query string, args ...interface{}) (sql.Result, error)
-	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
-}
-
-type Queryer interface {
-	Query(query string, args ...interface{}) (*sql.Rows, error)
-	QueryRow(query string, args ...interface{}) *sql.Row
-
-	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
-	QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row
-}
-
-type Rows interface {
-	Close() error
-	Columns() ([]string, error)
-	Err() error
-	Next() bool
-	Scan(...interface{}) error
-}
-
 type MultiTx struct {
 	Query string
 	Args  []interface{}
@@ -273,7 +247,7 @@ func queryElems(db Queryer, ctx context.Context, arr interface{}, querySql strin
 // 执行一个通用的查询
 // 因需要查标题，相对标准sql会慢一些，适用于偷懒查询的方式
 // 即使发生错误返回至少是零长度的值
-func queryTable(db Queryer, ctx context.Context, querySql string, args ...interface{}) (titles []string, result [][]interface{}, err error) {
+func queryMatrixArr(db Queryer, ctx context.Context, querySql string, args ...interface{}) (titles []string, result [][]interface{}, err error) {
 	titles = []string{}
 	result = [][]interface{}{}
 	rows, err := db.QueryContext(ctx, querySql, args...)
@@ -304,36 +278,36 @@ func queryTable(db Queryer, ctx context.Context, querySql string, args ...interf
 // 查询一条数据，并发map结构返回，以便页面可以直接调用
 // 因需要查标题，相对标准sql会慢一些，适用于偷懒查询的方式
 // 即使发生错误返回至少是零长度的值
-func queryMap(db Queryer, ctx context.Context, querySql string, args ...interface{}) ([]map[string]interface{}, error) {
+func queryMatrixMap(db Queryer, ctx context.Context, querySql string, args ...interface{}) ([]string, []map[string]interface{}, error) {
 	rows, err := db.QueryContext(ctx, querySql, args...)
 	if err != nil {
-		return []map[string]interface{}{}, errors.As(err, args)
+		return nil, []map[string]interface{}{}, errors.As(err, args)
 	}
 	defer Close(rows)
 
-	names, err := rows.Columns()
+	titles, err := rows.Columns()
 	if err != nil {
-		return []map[string]interface{}{}, errors.As(err, args)
+		return titles, []map[string]interface{}{}, errors.As(err, args)
 	}
 
 	result := []map[string]interface{}{}
 	for rows.Next() {
-		r := makeDBData(len(names))
+		r := makeDBData(len(titles))
 		if err := rows.Scan(r...); err != nil {
-			return []map[string]interface{}{}, errors.As(err, args)
+			return titles, []map[string]interface{}{}, errors.As(err, args)
 		}
 		mData := map[string]interface{}{}
-		for i, name := range names {
+		for i, name := range titles {
 			_, ok := mData[name]
 			if ok {
-				return result, errors.New("Already exist column name").As(name)
+				return titles, result, errors.New("Already exist column name").As(name)
 			}
 			mData[name] = r[i]
 		}
 		result = append(result, mData)
 	}
 	if len(result) == 0 {
-		return []map[string]interface{}{}, errors.ErrNoData.As(err, args)
+		return titles, result, errors.ErrNoData.As(err, args)
 	}
-	return result, nil
+	return titles, result, nil
 }

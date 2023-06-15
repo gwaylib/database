@@ -5,19 +5,23 @@
 //      CountSql:`SELECT count(1) FROM user_info WHERE create_time >= ? AND create_time <= ?`,
 //      DataSql:`SELECT mobile, balance FROM user_info WHERE create_time >= ? AND create_time <= ?`
 // }
-// count, err := qSql.QueryCount(
-// if err != nil{
-//     return errors.As(err)
-// }
-// if count==0 {
-//     return errors.ErrNoData
-// }
 // titles, result, err := qSql.QueryArray(db, condition, 0, 10)
 // ...
 // Or
 // count, titles, result, err := qSql.QueryMap(db, condtion, 0, 10)
 // ...
-
+// if err != nil {
+//	   if !errors.ErrNoData.Equal(err) {
+//         return errors.As(err)
+//     }
+//     // no data
+// } else {
+//     // query the total count if need.
+//     count, err := qSql.QueryCount(db, condition)
+//     if err != nil{
+//         return errors.As(err)
+//     }
+// }
 //
 package database
 

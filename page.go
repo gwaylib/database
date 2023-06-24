@@ -5,10 +5,10 @@
 //      CountSql:`SELECT count(1) FROM user_info WHERE create_time >= ? AND create_time <= ?`,
 //      DataSql:`SELECT mobile, balance FROM user_info WHERE create_time >= ? AND create_time <= ?`
 // }
-// titles, result, err := qSql.QueryArray(db, condition, 0, 10)
+// titles, result, err := qSql.QueryPageArray(db, condition, 0, 10)
 // ...
 // Or
-// count, titles, result, err := qSql.QueryMap(db, condtion, 0, 10)
+// count, titles, result, err := qSql.QueryPageMap(db, condtion, 0, 10)
 // ...
 // if err != nil {
 //	   if !errors.ErrNoData.Equal(err) {
@@ -62,16 +62,16 @@ func (p *Page) QueryCount(db *DB, args ...interface{}) (int64, error) {
 	return count, nil
 }
 
-func (p *Page) QueryMatrixArr(db *DB, args ...interface{}) ([]string, [][]interface{}, error) {
-	titles, data, err := QueryMatrixArr(db, p.DataSql, args...)
+func (p *Page) QueryPageArr(db *DB, args ...interface{}) ([]string, [][]interface{}, error) {
+	titles, data, err := QueryPageArr(db, p.DataSql, args...)
 	if err != nil {
 		return nil, nil, errors.As(err)
 	}
 	return titles, data, nil
 }
 
-func (p *Page) QueryMatrixMap(db *DB, args ...interface{}) ([]string, []map[string]interface{}, error) {
-	title, data, err := QueryMatrixMap(db, p.DataSql, args...)
+func (p *Page) QueryPageMap(db *DB, args ...interface{}) ([]string, []map[string]interface{}, error) {
+	title, data, err := QueryPageMap(db, p.DataSql, args...)
 	if err != nil {
 		return nil, nil, errors.As(err)
 	}

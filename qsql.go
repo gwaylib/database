@@ -247,7 +247,7 @@ func queryElems(db Queryer, ctx context.Context, arr interface{}, querySql strin
 // 执行一个通用的查询
 // 因需要查标题，相对标准sql会慢一些，适用于偷懒查询的方式
 // 即使发生错误返回至少是零长度的值
-func queryMatrixArr(db Queryer, ctx context.Context, querySql string, args ...interface{}) (titles []string, result [][]interface{}, err error) {
+func queryPageArr(db Queryer, ctx context.Context, querySql string, args ...interface{}) (titles []string, result [][]interface{}, err error) {
 	titles = []string{}
 	result = [][]interface{}{}
 	rows, err := db.QueryContext(ctx, querySql, args...)
@@ -278,7 +278,7 @@ func queryMatrixArr(db Queryer, ctx context.Context, querySql string, args ...in
 // 查询一条数据，并发map结构返回，以便页面可以直接调用
 // 因需要查标题，相对标准sql会慢一些，适用于偷懒查询的方式
 // 即使发生错误返回至少是零长度的值
-func queryMatrixMap(db Queryer, ctx context.Context, querySql string, args ...interface{}) ([]string, []map[string]interface{}, error) {
+func queryPageMap(db Queryer, ctx context.Context, querySql string, args ...interface{}) ([]string, []map[string]interface{}, error) {
 	rows, err := db.QueryContext(ctx, querySql, args...)
 	if err != nil {
 		return nil, []map[string]interface{}{}, errors.As(err, args)

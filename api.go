@@ -205,17 +205,17 @@ func QueryElemsContext(db Queryer, ctx context.Context, result interface{}, quer
 }
 
 // Reflect the query result to a string array.
-func QueryMatrixArr(db Queryer, querySql string, args ...interface{}) (titles []string, result [][]interface{}, err error) {
-	return queryMatrixArr(db, context.TODO(), querySql, args...)
+func QueryPageArr(db Queryer, querySql string, args ...interface{}) (titles []string, result [][]interface{}, err error) {
+	return queryPageArr(db, context.TODO(), querySql, args...)
 }
-func QueryMatrixArrContext(db Queryer, ctx context.Context, querySql string, args ...interface{}) (titles []string, result [][]interface{}, err error) {
-	return queryMatrixArr(db, ctx, querySql, args...)
+func QueryPageArrContext(db Queryer, ctx context.Context, querySql string, args ...interface{}) (titles []string, result [][]interface{}, err error) {
+	return queryPageArr(db, ctx, querySql, args...)
 }
 
 // Reflect the query result to a string map.
-func QueryMatrixMap(db Queryer, querySql string, args ...interface{}) (titles []string, result []map[string]interface{}, err error) {
-	return queryMatrixMap(db, context.TODO(), querySql, args...)
+func QueryPageMap(db Queryer, querySql string, args ...interface{}) (titles []string, result []map[string]interface{}, err error) {
+	return queryPageMap(db, context.TODO(), querySql, args...)
 }
-func QueryMatrixMapContext(db Queryer, ctx context.Context, querySql string, args ...interface{}) (titles []string, result []map[string]interface{}, err error) {
-	return queryMatrixMap(db, ctx, querySql, args...)
+func QueryPageMapContext(db Queryer, ctx context.Context, querySql string, args ...interface{}) (titles []string, result []map[string]interface{}, err error) {
+	return queryPageMap(db, ctx, querySql, args...)
 }

@@ -5,22 +5,16 @@
 //      CountSql:`SELECT count(1) FROM user_info WHERE create_time >= ? AND create_time <= ?`,
 //      DataSql:`SELECT mobile, balance FROM user_info WHERE create_time >= ? AND create_time <= ?`
 // }
-// titles, result, err := qSql.QueryPageArray(db, condition, 0, 10)
+// count, titles, result, err := qSql.QueryPageArray(db, true, condition, 0, 10)
 // ...
 // Or
-// count, titles, result, err := qSql.QueryPageMap(db, condtion, 0, 10)
+// count, titles, result, err := qSql.QueryPageMap(db, true, condtion, 0, 10)
 // ...
 // if err != nil {
 //	   if !errors.ErrNoData.Equal(err) {
 //         return errors.As(err)
 //     }
 //     // no data
-// } else {
-//     // query the total count if need.
-//     count, err := qSql.QueryCount(db, condition)
-//     if err != nil{
-//         return errors.As(err)
-//     }
 // }
 //
 package database
@@ -62,18 +56,34 @@ func (p *Page) QueryCount(db *DB, args ...interface{}) (int64, error) {
 	return count, nil
 }
 
-func (p *Page) QueryPageArr(db *DB, args ...interface{}) ([]string, [][]interface{}, error) {
-	titles, data, err := QueryPageArr(db, p.DataSql, args...)
+func (p *Page) QueryPageArr(db *DB, doCount bool, offset, limit int64, countArgs ...interface{}) (int64, []string, [][]interface{}, error) {
+	total := int64(0)
+	dataArgs := append(countArgs, []interface{}{offset, limit}...)
+	titles, data, err := QueryPageArr(db, p.DataSql, dataArgs...)
 	if err != nil {
-		return nil, nil, errors.As(err)
+		return total, nil, nil, errors.As(err)
+	} else if doCount {
+		count, err := p.QueryCount(db, countArgs)
+		if err != nil {
+			return total, nil, nil, errors.As(err)
+		}
+		total = count
 	}
-	return titles, data, nil
+	return total, titles, data, nil
 }
 
-func (p *Page) QueryPageMap(db *DB, args ...interface{}) ([]string, []map[string]interface{}, error) {
-	title, data, err := QueryPageMap(db, p.DataSql, args...)
+func (p *Page) QueryPageMap(db *DB, doCount bool, offset, limit int64, countArgs ...interface{}) (int64, []string, []map[string]interface{}, error) {
+	total := int64(0)
+	dataArgs := append(countArgs, []interface{}{offset, limit}...)
+	title, data, err := QueryPageMap(db, p.DataSql, dataArgs...)
 	if err != nil {
-		return nil, nil, errors.As(err)
+		return total, nil, nil, errors.As(err)
+	} else if doCount {
+		count, err := p.QueryCount(db, countArgs)
+		if err != nil {
+			return total, nil, nil, errors.As(err)
+		}
+		total = count
 	}
-	return title, data, nil
+	return total, title, data, nil
 }

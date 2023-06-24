@@ -99,17 +99,18 @@ func main() {
 
 	// query data in string
 	// table type
-	titles, data, err := database.QueryTable(mdb, "SELECT * FROM user LIMIT 10")
+	titles, data, err := database.QueryPageArr(mdb, "SELECT * FROM user LIMIT 10")
 	if err != nil {
 		panic(err)
 	}
 	fmt.Printf("table title:%+v\n", titles)
 	fmt.Printf("table data: %+v\n", data)
 	// map type
-	mData, err := database.QueryMap(mdb, "SELECT * FROM user LIMIT 10")
+	titles, mData, err := database.QueryPageMap(mdb, "SELECT * FROM user LIMIT 10")
 	if err != nil {
 		panic(err)
 	}
+	fmt.Printf("title:%+v\n", titles)
 	fmt.Printf("mData: %+v\n", mData)
 
 	// execute for tx

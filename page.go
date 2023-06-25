@@ -25,6 +25,25 @@ import (
 	"github.com/gwaylib/errors"
 )
 
+type PageArgs struct {
+	args   []interface{}
+	offset int64
+	limit  int64
+}
+
+func NewPageArgs(args ...interface{}) *PageArgs {
+	return &PageArgs{
+		args: args,
+	}
+}
+
+// using offset and limit when limit is set.
+func (p *PageArgs) Limit(offset, limit int64) *PageArgs {
+	p.offset = offset
+	p.limit = limit
+	return p
+}
+
 type Page struct {
 	CountSql string
 	DataSql  string
@@ -56,14 +75,17 @@ func (p *Page) QueryCount(db *DB, args ...interface{}) (int64, error) {
 	return count, nil
 }
 
-func (p *Page) QueryPageArr(db *DB, doCount bool, offset, limit int64, countArgs ...interface{}) (int64, []string, [][]interface{}, error) {
+func (p *Page) QueryPageArr(db *DB, args *PageArgs) (int64, []string, [][]interface{}, error) {
 	total := int64(0)
-	dataArgs := append(countArgs, []interface{}{offset, limit}...)
+	dataArgs := args.args
+	if args.limit > 0 {
+		dataArgs = append(dataArgs, []interface{}{args.offset, args.limit}...)
+	}
 	titles, data, err := QueryPageArr(db, p.DataSql, dataArgs...)
 	if err != nil {
 		return total, nil, nil, errors.As(err)
-	} else if doCount {
-		count, err := p.QueryCount(db, countArgs)
+	} else if args.limit > 0 {
+		count, err := p.QueryCount(db, args.args)
 		if err != nil {
 			return total, nil, nil, errors.As(err)
 		}
@@ -72,14 +94,17 @@ func (p *Page) QueryPageArr(db *DB, doCount bool, offset, limit int64, countArgs
 	return total, titles, data, nil
 }
 
-func (p *Page) QueryPageMap(db *DB, doCount bool, offset, limit int64, countArgs ...interface{}) (int64, []string, []map[string]interface{}, error) {
+func (p *Page) QueryPageMap(db *DB, args *PageArgs) (int64, []string, []map[string]interface{}, error) {
 	total := int64(0)
-	dataArgs := append(countArgs, []interface{}{offset, limit}...)
+	dataArgs := args.args
+	if args.limit > 0 {
+		dataArgs = append(dataArgs, []interface{}{args.offset, args.limit}...)
+	}
 	title, data, err := QueryPageMap(db, p.DataSql, dataArgs...)
 	if err != nil {
 		return total, nil, nil, errors.As(err)
-	} else if doCount {
-		count, err := p.QueryCount(db, countArgs)
+	} else if args.limit > 0 {
+		count, err := p.QueryCount(db, args.args)
 		if err != nil {
 			return total, nil, nil, errors.As(err)
 		}

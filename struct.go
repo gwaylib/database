@@ -114,29 +114,6 @@ func makeDBData(l int) []interface{} {
 	return r
 }
 
-type Template struct {
-	CountSql string // 读取数据总行数
-	DataSql  string // 读取数据细节
-}
-
-// 返回一个fmt.Sprintf()格式化Sql后的Template，
-// 主要用于分表的读取
-func (t Template) Sprintf(args ...interface{}) *Template {
-	countSql := t.CountSql
-	if len(countSql) > 0 {
-		countSql = fmt.Sprintf(t.CountSql, args...)
-	}
-	dataSql := t.DataSql
-	if len(dataSql) > 0 {
-		dataSql = fmt.Sprintf(t.DataSql, args...)
-	}
-
-	return &Template{
-		CountSql: countSql,
-		DataSql:  dataSql,
-	}
-}
-
 var refxM = reflectx.NewMapperTagFunc("db", func(in string) string {
 	// for tag name
 	return in

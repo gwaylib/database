@@ -44,47 +44,67 @@ func (p *PageArgs) Limit(offset, limit int64) *PageArgs {
 	return p
 }
 
-type Page struct {
-	CountSql string
-	DataSql  string
+type PageSql struct {
+	countSql string
+	dataSql  string
+}
+
+func NewPageSql(countSql, dataSql string) *PageSql {
+	if len(countSql) == 0 {
+		panic("countSql not set")
+	}
+	if len(dataSql) == 0 {
+		panic("dataSql not set")
+	}
+	return &PageSql{
+		countSql: countSql,
+		dataSql:  dataSql,
+	}
+}
+
+func (p PageSql) CountSql() string {
+	return p.countSql
+}
+func (p PageSql) DataSql() string {
+	return p.dataSql
 }
 
 // fill the page sql with fmt arg, and return a new page
 // Typically used for table name formatting
-func (p Page) FmtPage(args ...interface{}) *Page {
-	countSql := p.CountSql
+func (p PageSql) FmtPage(args ...interface{}) PageSql {
+	countSql := p.countSql
 	if len(countSql) > 0 {
-		countSql = fmt.Sprintf(p.CountSql, args...)
+		countSql = fmt.Sprintf(p.countSql, args...)
 	}
-	dataSql := p.DataSql
+	dataSql := p.dataSql
 	if len(dataSql) > 0 {
-		dataSql = fmt.Sprintf(p.DataSql, args...)
+		dataSql = fmt.Sprintf(p.dataSql, args...)
 	}
 
-	return &Page{
-		CountSql: countSql,
-		DataSql:  dataSql,
+	return PageSql{
+		countSql: countSql,
+		dataSql:  dataSql,
 	}
 }
 
-func (p *Page) QueryCount(db *DB, args ...interface{}) (int64, error) {
+func (p *PageSql) QueryCount(db *DB, args ...interface{}) (int64, error) {
 	count := int64(0)
-	if err := QueryElem(db, &count, p.CountSql, args...); err != nil {
+	if err := QueryElem(db, &count, p.countSql, args...); err != nil {
 		return 0, errors.As(err)
 	}
 	return count, nil
 }
 
-func (p *Page) QueryPageArr(db *DB, args *PageArgs) (int64, []string, [][]interface{}, error) {
+func (p *PageSql) QueryPageArr(db *DB, doCount bool, args *PageArgs) (int64, []string, [][]interface{}, error) {
 	total := int64(0)
 	dataArgs := args.args
 	if args.limit > 0 {
 		dataArgs = append(dataArgs, []interface{}{args.offset, args.limit}...)
 	}
-	titles, data, err := QueryPageArr(db, p.DataSql, dataArgs...)
+	titles, data, err := QueryPageArr(db, p.dataSql, dataArgs...)
 	if err != nil {
 		return total, nil, nil, errors.As(err)
-	} else if args.limit > 0 {
+	} else if doCount {
 		count, err := p.QueryCount(db, args.args)
 		if err != nil {
 			return total, nil, nil, errors.As(err)
@@ -94,16 +114,16 @@ func (p *Page) QueryPageArr(db *DB, args *PageArgs) (int64, []string, [][]interf
 	return total, titles, data, nil
 }
 
-func (p *Page) QueryPageMap(db *DB, args *PageArgs) (int64, []string, []map[string]interface{}, error) {
+func (p *PageSql) QueryPageMap(db *DB, doCount bool, args *PageArgs) (int64, []string, []map[string]interface{}, error) {
 	total := int64(0)
 	dataArgs := args.args
 	if args.limit > 0 {
 		dataArgs = append(dataArgs, []interface{}{args.offset, args.limit}...)
 	}
-	title, data, err := QueryPageMap(db, p.DataSql, dataArgs...)
+	title, data, err := QueryPageMap(db, p.dataSql, dataArgs...)
 	if err != nil {
 		return total, nil, nil, errors.As(err)
-	} else if args.limit > 0 {
+	} else if doCount {
 		count, err := p.QueryCount(db, args.args)
 		if err != nil {
 			return total, nil, nil, errors.As(err)

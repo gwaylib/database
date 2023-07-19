@@ -105,7 +105,7 @@ func (p *PageSql) QueryPageArr(db *DB, doCount bool, args *PageArgs) (int64, []s
 	if err != nil {
 		return total, nil, nil, errors.As(err)
 	} else if doCount {
-		count, err := p.QueryCount(db, args.args)
+		count, err := p.QueryCount(db, args.args...)
 		if err != nil {
 			return total, nil, nil, errors.As(err)
 		}
@@ -124,7 +124,7 @@ func (p *PageSql) QueryPageMap(db *DB, doCount bool, args *PageArgs) (int64, []s
 	if err != nil {
 		return total, nil, nil, errors.As(err)
 	} else if doCount {
-		count, err := p.QueryCount(db, args.args)
+		count, err := p.QueryCount(db, args.args...)
 		if err != nil {
 			return total, nil, nil, errors.As(err)
 		}

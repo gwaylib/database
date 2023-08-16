@@ -9,17 +9,9 @@ import (
 )
 
 type TestingUser struct {
-	ID       int64  `db:"id,auto_increment"`
+	ID       int64  `db:"id,auto_increment"` // auto_increment or autoincrement
 	UserName string `db:"username"`
 	Passwd   string `db:"passwd"`
-}
-
-// implement LastInsertId callback
-func (u *TestingUser) SetLastInsertId(id int64, err error) {
-	if err != nil {
-		panic(err)
-	}
-	u.ID = id
 }
 
 func main() {
@@ -29,10 +21,10 @@ func main() {
 	// create table
 	if _, err := database.Exec(mdb,
 		`CREATE TABLE user (
-		  "id" INTEGER PRIMARY KEY NOT NULL,
+		  "id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+		  "created_at" datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		  "username" VARCHAR(32) NOT NULL UNIQUE,
-		  "passwd" VARCHAR(128) NOT NULL,
-		  "created_at" datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
+		  "passwd" VARCHAR(128) NOT NULL
 		);`); err != nil {
 		panic(err)
 	}
@@ -88,14 +80,14 @@ func main() {
 	if pwd != "t1" {
 		panic(pwd)
 	}
-	pwds := []string{}
-	if err := database.QueryElems(mdb, &pwds, "SELECT passwd FROM user LIMIT 2"); err != nil {
+	ids := []int64{}
+	if err := database.QueryElems(mdb, &ids, "SELECT id FROM user LIMIT 2"); err != nil {
 		panic(err)
 	}
-	if len(pwds) != 2 {
+	if len(ids) != 2 {
 		panic("expect len==2")
 	}
-	fmt.Printf("elems:%+v\n", pwds)
+	fmt.Printf("ids:%+v\n", ids)
 
 	// query data in string
 	// table type
@@ -103,15 +95,15 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("table title:%+v\n", titles)
-	fmt.Printf("table data: %+v\n", data)
+	fmt.Printf("PageArr title:%+v\n", titles)
+	fmt.Printf("PageArr data: %+v\n", data)
 	// map type
 	titles, mData, err := database.QueryPageMap(mdb, "SELECT * FROM user LIMIT 10")
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("title:%+v\n", titles)
-	fmt.Printf("mData: %+v\n", mData)
+	fmt.Printf("PageMap title:%+v\n", titles)
+	fmt.Printf("PageMap data: %+v\n", mData)
 
 	// execute for tx
 	tx, err := mdb.Begin()
@@ -124,13 +116,13 @@ func main() {
 	}
 	for _, u := range txUsers {
 		if _, err := database.InsertStruct(tx, &u, "user"); err != nil {
-			fmt.Println(errors.As(err))
+			println(errors.As(err))
 			database.Rollback(tx)
 			return
 		}
 	}
 	if err := tx.Commit(); err != nil {
-		fmt.Println(errors.As(err))
+		println(errors.As(err))
 		database.Rollback(tx)
 		return
 	}

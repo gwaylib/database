@@ -3,13 +3,14 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"reflect"
 	"testing"
 	"time"
 )
 
 // for id insert
 type ReflectTestStruct1 struct {
-	Id         int64          `db:"id"`
+	Id         int64          `db:"id,auto_increment"`
 	A          int            `db:"a"`
 	B          int            `db:"-"`
 	T          time.Time      `db:"time"`
@@ -22,17 +23,10 @@ type ReflectTestStruct1 struct {
 
 // for autoincrement
 type ReflectTestStruct2 struct {
-	Id int64 `db:"id,autoincrement"`
+	Id int64 `db:"id"`
 	A  int   `db:"a"`
 	B  int   `db:"-"`
 	C  string
-}
-
-func (r *ReflectTestStruct2) SetLastInsertId(id int64, err error) {
-	if err != nil {
-		panic(err)
-	}
-	r.Id = id
 }
 
 type ReflectTestStruct3 struct {
@@ -47,43 +41,47 @@ type ReflectTestStruct4 struct {
 
 func TestReflect(t *testing.T) {
 	s1 := &ReflectTestStruct1{
-		Id:    1,
 		A:     100,
 		B:     200,
 		C:     "testing",
 		Slice: []byte("abc"),
 	}
-	names, inputs, vals, err := reflectInsertStruct(s1, "mysql")
+	refVal, err := reflectInsertStruct(s1, "mysql")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if names != "`id`,`a`,`time`,`data`,`byte`,`dbdata`,`null_string`,`C`" {
-		t.Fatal(names)
+	if refVal.Names != "`a`,`time`,`data`,`byte`,`dbdata`,`null_string`,`C`" {
+		t.Fatal(refVal.Names)
 	}
-	if inputs != "?,?,?,?,?,?,?,?" {
-		t.Fatal(inputs)
+	if refVal.Stmts != "?,?,?,?,?,?,?" {
+		t.Fatal(refVal.Stmts)
 	}
-	if len(vals) != 8 {
-		t.Fatalf("%+v\n", vals)
+	if len(refVal.Values) != 7 {
+		t.Fatalf("%+v\n", refVal.Values)
+	}
+	refVal.SetAutoIncrement(reflect.ValueOf(int64(2)))
+	if refVal.AutoIncrement.Int() != 2 {
+		t.Fatalf("expect 2, but:%v", refVal.AutoIncrement.Int())
 	}
 
 	s2 := &ReflectTestStruct2{
-		A: 101,
-		B: 201,
-		C: "testing1",
+		Id: 1,
+		A:  101,
+		B:  201,
+		C:  "testing1",
 	}
-	names, inputs, vals, err = reflectInsertStruct(s2, "mysql")
+	refVal, err = reflectInsertStruct(s2, "mysql")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if names != "`a`,`C`" {
-		t.Fatal(names)
+	if refVal.Names != "`id`,`a`,`C`" {
+		t.Fatal(refVal.Names)
 	}
-	if inputs != "?,?" {
-		t.Fatal(inputs)
+	if refVal.Stmts != "?,?,?" {
+		t.Fatal(refVal.Stmts)
 	}
-	if len(vals) != 2 {
-		t.Fatalf("%+v\n", vals)
+	if len(refVal.Values) != 3 {
+		t.Fatalf("%+v\n", refVal.Values)
 	}
 
 	s4 := &ReflectTestStruct4{
@@ -94,17 +92,17 @@ func TestReflect(t *testing.T) {
 		},
 		E: "e",
 	}
-	names, inputs, vals, err = reflectInsertStruct(s4, "oracle")
+	refVal, err = reflectInsertStruct(s4, "oracle")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if names != `"id","a","time","data","byte","dbdata","null_string","C","d","a","C","e"` {
-		t.Fatal(names)
+	if refVal.Names != `"a","time","data","byte","dbdata","null_string","C","d","id","a","C","e"` {
+		t.Fatal(refVal.Names)
 	}
-	if inputs != ":id,:a,:time,:data,:byte,:dbdata,:null_string,:C,:d,:a,:C,:e" {
-		t.Fatal(inputs)
+	if refVal.Stmts != ":a,:time,:data,:byte,:dbdata,:null_string,:C,:d,:id,:a,:C,:e" {
+		t.Fatal(refVal.Stmts)
 	}
-	if fmt.Sprintf("%+v", vals) != `[1 100 0001-01-01 00:00:00 +0000 UTC [97 98 99] 0  {String: Valid:false} testing d 101 testing1 e]` {
-		t.Fatal(vals)
+	if fmt.Sprintf("%+v", refVal.Values) != `[100 0001-01-01 00:00:00 +0000 UTC [97 98 99] 0  {String: Valid:false} testing d 1 101 testing1 e]` {
+		t.Fatal(refVal.Values)
 	}
 }

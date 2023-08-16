@@ -31,11 +31,6 @@ var (
 	REFLECT_DRV_NAME = DRV_NAME_MYSQL
 )
 
-type AutoIncrAble interface {
-	// notify for last id
-	SetLastInsertId(id int64, err error)
-}
-
 type Execer interface {
 	Exec(query string, args ...interface{}) (sql.Result, error)
 	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)

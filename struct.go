@@ -127,12 +127,13 @@ var refxM = reflectx.NewMapperTagFunc("db", func(in string) string {
 	return strings.Join(trims, ",")
 })
 
-func travelStructField(f *reflectx.FieldInfo, v reflect.Value, order *int, drvName *string, outputNames *[]byte, outputInputs *[]byte, outputVals *[]interface{}) {
+// return is it a auto_increment field
+func travelStructField(f *reflectx.FieldInfo, v *reflect.Value, order *int, drvName *string, outputNames *[]byte, outputInputs *[]byte, outputVals *[]interface{}) *reflect.Value {
 	*order += 1
 	switch v.Kind() {
 	case reflect.Invalid:
 		// nil value
-		return
+		return nil
 	case
 		reflect.Bool,
 		reflect.Int,
@@ -158,6 +159,7 @@ func travelStructField(f *reflectx.FieldInfo, v reflect.Value, order *int, drvNa
 		case "time.Time":
 			break
 		default:
+			var autoIncrement *reflect.Value
 			childrenLen := len(f.Children)
 			for i := 0; i < childrenLen; i++ {
 				child := f.Children[i]
@@ -165,14 +167,18 @@ func travelStructField(f *reflectx.FieldInfo, v reflect.Value, order *int, drvNa
 					// found ignore tag, do next.
 					continue
 				}
-				travelStructField(
+				fieldVal := reflect.Indirect(*v).Field(i)
+				autoFiled := travelStructField(
 					child,
-					reflect.Indirect(v).Field(i),
+					&fieldVal,
 					order, drvName,
 					outputNames, outputInputs, outputVals,
 				)
+				if autoFiled != nil {
+					autoIncrement = autoFiled
+				}
 			}
-			return
+			return autoIncrement
 		}
 	default:
 		// unsupport
@@ -180,7 +186,7 @@ func travelStructField(f *reflectx.FieldInfo, v reflect.Value, order *int, drvNa
 		case "[]uint8":
 			break
 		default:
-			return
+			return nil
 		}
 	}
 
@@ -191,12 +197,12 @@ func travelStructField(f *reflectx.FieldInfo, v reflect.Value, order *int, drvNa
 	_, ok := f.Options["autoincrement"]
 	if ok {
 		// ignore 'autoincrement' for insert data
-		return
+		return v
 	}
 	_, ok = f.Options["auto_increment"]
 	if ok {
 		// ignore 'auto_increment' for insert data
-		return
+		return v
 	}
 
 	*outputVals = append(*outputVals, v.Interface())
@@ -222,16 +228,31 @@ func travelStructField(f *reflectx.FieldInfo, v reflect.Value, order *int, drvNa
 		*outputInputs = append(*outputInputs, []byte("?,")...)
 	}
 
-	return
+	return nil
 }
 
-func reflectInsertStruct(i interface{}, drvName string) (string, string, []interface{}, error) {
+type reflectInsertField struct {
+	Names  string
+	Stmts  string
+	Values []interface{}
+
+	AutoIncrement *reflect.Value
+}
+
+func (r *reflectInsertField) SetAutoIncrement(v reflect.Value) {
+	if r.AutoIncrement == nil {
+		return
+	}
+	r.AutoIncrement.Set(v)
+}
+
+func reflectInsertStruct(i interface{}, drvName string) (*reflectInsertField, error) {
 	v := reflect.ValueOf(i)
 	k := v.Kind()
 	switch k {
 	case reflect.Ptr:
 	default:
-		return "", "", nil, errors.New("Unsupport reflect type").As(k.String())
+		return nil, errors.New("Unsupport reflect type").As(k.String())
 	}
 	v = reflect.Indirect(v)
 
@@ -240,6 +261,7 @@ func reflectInsertStruct(i interface{}, drvName string) (string, string, []inter
 	names := []byte{}
 	inputs := []byte{}
 	vals := []interface{}{}
+	var autoIncrement *reflect.Value
 
 	childrenLen := len(tm.Tree.Children)
 	order := 0
@@ -249,11 +271,21 @@ func reflectInsertStruct(i interface{}, drvName string) (string, string, []inter
 			// found ignore tag, do next.
 			continue
 		}
-		travelStructField(field, v.Field(i), &order, &drvName, &names, &inputs, &vals)
+
+		fieldVal := v.Field(i)
+		autoField := travelStructField(field, &fieldVal, &order, &drvName, &names, &inputs, &vals)
+		if autoField != nil {
+			autoIncrement = autoField
+		}
 	}
 
 	if len(names) == 0 {
 		panic("No public field in struct")
 	}
-	return string(names[:len(names)-1]), string(inputs[:len(inputs)-1]), vals, nil
+	return &reflectInsertField{
+		Names:         string(names[:len(names)-1]),
+		Stmts:         string(inputs[:len(inputs)-1]),
+		Values:        vals,
+		AutoIncrement: autoIncrement,
+	}, nil
 }

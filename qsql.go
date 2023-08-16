@@ -40,19 +40,19 @@ func insertStruct(exec Execer, ctx context.Context, obj interface{}, tbName stri
 		}
 	}
 
-	names, inputs, vals, err := reflectInsertStruct(obj, drvName)
+	fields, err := reflectInsertStruct(obj, drvName)
 	if err != nil {
 		return nil, errors.As(err)
 	}
-	execSql := fmt.Sprintf(addObjSql, tbName, names, inputs)
+	execSql := fmt.Sprintf(addObjSql, tbName, fields.Names, fields.Stmts)
 	// log.Debugf("%s%+v", execSql, vals)
-	result, err := exec.ExecContext(ctx, execSql, vals...)
+	result, err := exec.ExecContext(ctx, execSql, fields.Values...)
 	if err != nil {
 		return nil, errors.As(err, execSql)
 	}
-	incr, ok := obj.(AutoIncrAble) // need obj is ptr kind.
-	if ok {
-		incr.SetLastInsertId(result.LastInsertId())
+	if fields.AutoIncrement != nil {
+		id, _ := result.LastInsertId()
+		fields.AutoIncrement.Set(reflect.ValueOf(id))
 	}
 	return result, nil
 }

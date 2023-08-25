@@ -52,7 +52,35 @@ func insertStruct(exec Execer, ctx context.Context, obj interface{}, tbName stri
 	}
 	if fields.AutoIncrement != nil {
 		id, _ := result.LastInsertId()
-		fields.AutoIncrement.Set(reflect.ValueOf(id))
+		var val reflect.Value
+		kind := fields.AutoIncrement.Kind()
+		switch kind {
+		case reflect.Int:
+			val = reflect.ValueOf(int(id))
+		case reflect.Int8:
+			val = reflect.ValueOf(int8(id))
+		case reflect.Int16:
+			val = reflect.ValueOf(int16(id))
+		case reflect.Int32:
+			val = reflect.ValueOf(int32(id))
+		case reflect.Int64:
+			val = reflect.ValueOf(int64(id))
+		case reflect.Uint: // Warnning: this maybe out of int64
+			val = reflect.ValueOf(uint(id))
+		case reflect.Uint8:
+			val = reflect.ValueOf(uint8(id))
+		case reflect.Uint16:
+			val = reflect.ValueOf(uint16(id))
+		case reflect.Uint32:
+			val = reflect.ValueOf(uint32(id))
+		case reflect.Uint64: // Warnning: this maybe out of int64
+			val = reflect.ValueOf(uint32(id))
+		default:
+			// unsupport other kind here
+			panic("unsupport auto increment kind:%s", kind.String())
+		}
+
+		fields.AutoIncrement.Set(val)
 	}
 	return result, nil
 }

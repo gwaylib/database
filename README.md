@@ -4,13 +4,13 @@ database/sql
 https://github.com/jmoiron/sqlx
 ```
 
-# Examle:
-More examle see the examle directory.
+# Example:
+More example see the example directory.
 
 ## Using etc cache
 Assume that the configuration file path is: './etc/db.cfg'
 
-The etc content
+The etc file content
 ```
 [master]
 driver: mysql
@@ -21,9 +21,9 @@ life_time:7200
 driver: mysql
 dsn: username:passwd@tcp(127.0.0.1:3306)/log?timeout=30s&strict=true&loc=Local&parseTime=true&allowOldPasswords=1
 life_time:7200
-``
+```
 
-Make a cache
+Make a package file for connection cache
 ``` text
 package db
 
@@ -57,7 +57,7 @@ Call a cache
 mdb := db.GetCache("master")
 ```
 
-## Standar query 
+## Call standar sql
 ``` text
 mdb := db.GetCache("master") 
 // or mdb = <sql.Tx>
@@ -78,16 +78,9 @@ result, err := database.Exec(mdb, "UPDATE ...")
 ## Insert a struct to db(using reflect)
 ``` text
 type User struct{
-    Id     int64  `db:"id,auto_increment"` // flag "autoincrement", "auto_increment" will call "SetLastInsertId" method if you implement the database.AutoIncrAble interface.
+    Id     int64  `db:"id,auto_increment"` // flag "autoincrement", "auto_increment" are supported .
     Name   string `db:"name"`
     Ignore string `db:"-"` // ignore flag: "-"
-}
-
-func (u *User)SetLastInsertId(id int64, err error){
-    if err != nil{
-        panic(err)
-    }
-    u.Id = id
 }
 
 var u = &User{
@@ -107,7 +100,7 @@ if _, err := database.InsertStruct(mdb, u, "testing", database.DRV_NAME_MYSQL); 
 // ...
 ```
 
-## MultiTx
+## Make a MultiTx
 ``` text
 multiTx := []*database.MultiTx{}
 multiTx = append(multiTx, database.NewMultiTx(
@@ -193,7 +186,7 @@ if len(u) == 0{
 
 ```
 
-## Query an element which implementd sql.Scanner
+## Query an element which is implemented sql.Scanner
 
 ```text
 mdb := db.GetCache("master") 
@@ -207,58 +200,20 @@ if err := database.QueryElem(mdb, &count, "SELECT count(*) FROM a WHERE id = ?",
 ## Mass query.
 ```text
 mdb := db.GetCache("master") 
-
-var (
-	userInfoQsql = &qsql.Template{
-		CountSql: `
-SELECT 
-    count(1) 
-FROM 
-    %s
-WHERE
-    mobile = ?
-`,
-		DataSql: `
-SELECT 
-    mobile "phone"
-FROM 
-    %s
-WHERE
-    mobile = ?
-ORDER BY
-    mobile
-LIMIT ?, ?
-`,
-	}
-)
-
-// Count the rows
-count := 0
-if err := database.QueryElem(
-    mdb,
-    &count, 
-    userInfoQsql.Sprintf("user_info_200601").CountSql,
-    "13800138000",
-); err != nil{
-    // ...
+qSql = &database.Page{
+     CountSql:`SELECT count(1) FROM user_info WHERE create_time >= ? AND create_time <= ?`,
+     DataSql:`SELECT mobile, balance FROM user_info WHERE create_time >= ? AND create_time <= ?`
 }
-
-// Query the result to a string table
-title, result, err := database.QueryTable(
-    mdb,
-    userInfoQsql.Sprintf("user_info_200601").DataSql,
-    "13800138000", currPage*10, 10)
+count, titles, result, err := qSql.QueryPageArray(db, true, condition, 0, 10)
+// ...
+// Or
+count, titles, result, err := qSql.QueryPageMap(db, true, condtion, 0, 10)
+// ...
 if err != nil {
-    // ...
-}
-
-// Query the result to a string map
-result, err := database.QueryMap(
-    mdb,
-    userInfoQsql.Sprintf("user_info_200601").DataSql,
-    "13800130000",
-    currPage*10, 10) 
-if err != nil {
-    // ...
+    if !errors.ErrNoData.Equal(err) {
+        return errors.As(err)
+    }
+    // no data
 }
 ```
+

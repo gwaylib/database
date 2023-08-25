@@ -77,7 +77,7 @@ func insertStruct(exec Execer, ctx context.Context, obj interface{}, tbName stri
 			val = reflect.ValueOf(uint32(id))
 		default:
 			// unsupport other kind here
-			panic("unsupport auto increment kind:%s", kind.String())
+			panic("unsupport auto increment kind: " + kind.String())
 		}
 
 		fields.AutoIncrement.Set(val)

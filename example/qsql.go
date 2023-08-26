@@ -105,7 +105,7 @@ func main() {
 	fmt.Printf("PageMap title:%+v\n", titles)
 	fmt.Printf("PageMap data: %+v\n", mData)
 
-	// execute for tx
+	// executer for tx
 	tx, err := mdb.Begin()
 	if err != nil {
 		panic(err)

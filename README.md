@@ -5,7 +5,7 @@ https://github.com/jmoiron/sqlx
 ```
 
 # Example:
-More example see the example directory.
+More example see the [example](./example) directory.
 
 ## Using etc cache
 Assume that the configuration file path is: './etc/db.cfg'
@@ -14,7 +14,7 @@ The etc file content
 ```
 [master]
 driver: mysql
-dsn: username:passwd@tcp(127.0.0.1:3306)/center?timeout=30s&strict=true&loc=Local&parseTime=true&allowOldPasswords=1
+dsn: username:passwd@tcp(127.0.0.1:3306)/main?timeout=30s&strict=true&loc=Local&parseTime=true&allowOldPasswords=1
 life_time:7200
 
 [log]
@@ -23,7 +23,7 @@ dsn: username:passwd@tcp(127.0.0.1:3306)/log?timeout=30s&strict=true&loc=Local&p
 life_time:7200
 ```
 
-Make a package file for connection cache
+Make a package for connection cache
 ``` text
 package db
 
@@ -98,34 +98,6 @@ if _, err := database.InsertStruct(mdb, u, "testing", database.DRV_NAME_MYSQL); 
     // ... 
 }
 // ...
-```
-
-## Make a MultiTx
-``` text
-multiTx := []*database.MultiTx{}
-multiTx = append(multiTx, database.NewMultiTx(
-    "UPDATE testing SET name = ? WHERE id = ?",
-    id,
-))
-multiTx = append(multiTx, database.NewMultiTx(
-    "UPDATE testing SET name = ? WHERE id = ?",
-    id,
-))
-
-// do exec multi tx
-mdb := db.GetCache("master") 
-tx, err := mdb.Begin()
-if err != nil{
-    // ...
-}
-if err := database.ExecMutlTx(tx, multiTx); err != nil {
-    database.Rollback(tx)
-    // ...
-}
-if err := tx.Commit(); err != nil {
-    database.Rollback(tx)
-    // ...
-}
 ```
 
 ## Quick query way
@@ -217,3 +189,30 @@ if err != nil {
 }
 ```
 
+## Make a MultiTx
+``` text
+multiTx := []*database.MultiTx{}
+multiTx = append(multiTx, database.NewMultiTx(
+    "UPDATE testing SET name = ? WHERE id = ?",
+    id,
+))
+multiTx = append(multiTx, database.NewMultiTx(
+    "UPDATE testing SET name = ? WHERE id = ?",
+    id,
+))
+
+// do exec multi tx
+mdb := db.GetCache("master") 
+tx, err := mdb.Begin()
+if err != nil{
+    // ...
+}
+if err := database.ExecMutlTx(tx, multiTx); err != nil {
+    database.Rollback(tx)
+    // ...
+}
+if err := tx.Commit(); err != nil {
+    database.Rollback(tx)
+    // ...
+}
+```

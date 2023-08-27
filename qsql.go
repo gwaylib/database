@@ -74,7 +74,7 @@ func insertStruct(exec Execer, ctx context.Context, obj interface{}, tbName stri
 		case reflect.Uint32:
 			val = reflect.ValueOf(uint32(id))
 		case reflect.Uint64: // Warnning: this maybe out of int64
-			val = reflect.ValueOf(uint32(id))
+			val = reflect.ValueOf(uint64(id))
 		default:
 			// unsupport other kind here
 			panic("unsupport auto increment kind: " + kind.String())

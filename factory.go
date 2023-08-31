@@ -75,6 +75,17 @@ func getCache(iniFileName, sectionName string) (*DB, error) {
 	return db, nil
 }
 
+func rmCache(src *DB) {
+	cacheLock.Lock()
+	defer cacheLock.Unlock()
+	for key, db := range cache {
+		if src == db {
+			delete(cache, key)
+			return
+		}
+	}
+}
+
 func closeCache() {
 	cacheLock.Lock()
 	defer cacheLock.Unlock()

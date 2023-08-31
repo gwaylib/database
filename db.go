@@ -40,5 +40,6 @@ func (db *DB) Close() error {
 	defer db.mu.Unlock()
 
 	db.isClose = true
+	rmCache(db)
 	return db.DB.Close()
 }

@@ -1,3 +1,6 @@
+
+** This is project is archived and renamed to [qsql](https://github.com/gwaylib/qsql) **
+
 # Refere to:
 ```
 database/sql

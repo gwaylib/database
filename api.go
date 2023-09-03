@@ -153,7 +153,6 @@ func QueryRowContext(db Queryer, ctx context.Context, querySql string, args ...i
 }
 
 // Relect the sql.Rows to a struct.
-// Return errors.ErrNoData if data not found.
 func ScanStruct(rows Rows, obj interface{}) error {
 	return scanStruct(rows, obj)
 }
@@ -166,7 +165,6 @@ func ScanStructs(rows Rows, obj interface{}) error {
 }
 
 // Reflect the sql.Query result to a struct.
-// Return errors.ErrNoData if data not found.
 func QueryStruct(db Queryer, obj interface{}, querySql string, args ...interface{}) error {
 	return queryStruct(db, context.TODO(), obj, querySql, args...)
 }

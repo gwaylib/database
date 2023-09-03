@@ -11,10 +11,7 @@
 // count, titles, result, err := qSql.QueryPageMap(db, true, condtion, 0, 10)
 // ...
 // if err != nil {
-//	   if !errors.ErrNoData.Equal(err) {
-//         return errors.As(err)
-//     }
-//     // no data
+// ...
 // }
 //
 package database

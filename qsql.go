@@ -147,7 +147,7 @@ func scanStruct(rows Rows, obj interface{}) error {
 		return errors.As(err)
 	}
 	if !rows.Next() {
-		return errors.ErrNoData
+		return sql.ErrNoRows
 	}
 	if err := rows.Scan(values...); err != nil {
 		return errors.As(err)
@@ -230,7 +230,7 @@ func queryElem(db Queryer, ctx context.Context, result interface{}, querySql str
 		if sql.ErrNoRows != err {
 			return errors.As(err, querySql, args)
 		}
-		return errors.ErrNoData.As(args)
+		return err
 	}
 	return nil
 }
@@ -296,9 +296,6 @@ func queryPageArr(db Queryer, ctx context.Context, querySql string, args ...inte
 		}
 		result = append(result, r)
 	}
-	if len(result) == 0 {
-		return titles, result, errors.ErrNoData.As(args)
-	}
 
 	return titles, result, nil
 }
@@ -333,9 +330,6 @@ func queryPageMap(db Queryer, ctx context.Context, querySql string, args ...inte
 			mData[name] = r[i]
 		}
 		result = append(result, mData)
-	}
-	if len(result) == 0 {
-		return titles, result, errors.ErrNoData.As(err, args)
 	}
 	return titles, result, nil
 }
